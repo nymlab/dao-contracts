@@ -11,13 +11,18 @@ use cw_utils::Duration;
 use indexable_hooks::HooksResponse;
 
 use testing::{ShouldExecute, TestVote};
-use voting::{PercentageThreshold, Status, Threshold, Vote, Votes};
+use voting::{
+    deposit::{CheckedDepositInfo, DepositInfo, DepositToken},
+    status::Status,
+    threshold::{PercentageThreshold, Threshold},
+    voting::{Vote, Votes},
+};
 
 use crate::{
-    msg::{DepositInfo, DepositToken, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
-    proposal::Proposal,
+    msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
+    proposal::SingleChoiceProposal,
     query::{ProposalListResponse, ProposalResponse, VoteInfo, VoteResponse},
-    state::{CheckedDepositInfo, Config},
+    state::Config,
     ContractError,
 };
 
@@ -474,7 +479,7 @@ fn do_votes_cw20_balances(
         threshold,
         expected_status,
         total_supply,
-        None,
+        None::<DepositInfo>,
         instantiate_with_cw20_balances_governance,
     );
 }
@@ -490,7 +495,7 @@ fn do_votes_staked_balances(
         threshold,
         expected_status,
         total_supply,
-        None,
+        None::<DepositInfo>,
         instantiate_with_staked_balances_governance,
     );
 }
@@ -506,7 +511,7 @@ fn do_votes_cw4_weights(
         threshold,
         expected_status,
         total_supply,
-        None,
+        None::<DepositInfo>,
         instantiate_with_cw4_groups_governance,
     );
 }
@@ -759,7 +764,7 @@ fn test_propose() {
         .query_wasm_smart(govmod_single, &QueryMsg::Proposal { proposal_id: 1 })
         .unwrap();
     let current_block = app.block_info();
-    let expected = Proposal {
+    let expected = SingleChoiceProposal {
         title: "A simple text proposal".to_string(),
         description: "This is a simple text proposal".to_string(),
         proposer: Addr::unchecked(CREATOR_ADDR),
@@ -1826,7 +1831,7 @@ fn test_query_list_proposals() {
 
     let expected = ProposalResponse {
         id: 1,
-        proposal: Proposal {
+        proposal: SingleChoiceProposal {
             title: "Text proposal 1.".to_string(),
             description: "This is a simple text proposal".to_string(),
             proposer: Addr::unchecked(CREATOR_ADDR),
@@ -1870,7 +1875,7 @@ fn test_query_list_proposals() {
 
     let expected = ProposalResponse {
         id: 4,
-        proposal: Proposal {
+        proposal: SingleChoiceProposal {
             title: "Text proposal 4.".to_string(),
             description: "This is a simple text proposal".to_string(),
             proposer: Addr::unchecked(CREATOR_ADDR),

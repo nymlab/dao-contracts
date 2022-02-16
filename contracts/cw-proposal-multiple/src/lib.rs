@@ -1,14 +1,13 @@
+pub mod constants;
 pub mod contract;
 mod error;
 pub mod msg;
 pub mod proposal;
 pub mod query;
-#[cfg(test)]
-mod staking_tests;
-
 pub mod state;
+
+pub mod voting_strategy;
+pub use crate::error::ContractError;
 
 #[cfg(test)]
 mod tests;
-
-pub use crate::error::ContractError;

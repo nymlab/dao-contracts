@@ -1,46 +1,32 @@
-use cosmwasm_std::{CosmosMsg, Empty};
 use cw_utils::Duration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use voting::{deposit::DepositInfo, voting::MultipleChoiceVote};
 
+use crate::{
+    state::{MultipleChoiceOption, MultipleChoiceOptions},
+    voting_strategy::VotingStrategy,
+};
 use cw_core_macros::govmod_query;
-use voting::{deposit::DepositInfo, threshold::Threshold, voting::Vote};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct InstantiateMsg {
-    /// The threshold a proposal must reach to complete.
-    pub threshold: Threshold,
-    /// The default maximum amount of time a proposal may be voted on
-    /// before expiring.
+    /// Voting params configuration
+    pub voting_strategy: VotingStrategy,
+    /// The amount of time a proposal can be voted on before expiring
     pub max_voting_period: Duration,
     /// If set to true only members may execute passed
     /// proposals. Otherwise, any address may execute a passed
     /// proposal.
     pub only_members_execute: bool,
-    /// Allows changing votes before the proposal expires. If this is
-    /// enabled proposals will not be able to complete early as final
-    /// vote information is not known until the time of proposal
-    /// expiration.
-    pub allow_revoting: bool,
     /// Information about the deposit required to create a
     /// proposal. None if there is no deposit requirement, Some
     /// otherwise.
     pub deposit_info: Option<DepositInfo>,
-}
-
-/// Information about the token to use for proposal deposits.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum DepositToken {
-    /// Use a specific token address as the deposit token.
-    Token { address: String },
-    /// Use the token address of the associated DAO's voting
-    /// module. NOTE: in order to use the token address of the voting
-    /// module the voting module must (1) use a cw20 token and (2)
-    /// implement the `TokenContract {}` query type defined by
-    /// `cw_core_macros::token_query`. Failing to implement that
-    /// and using this option will cause instantiation to fail.
-    VotingModuleToken {},
+    /// The existing governance token address
+    pub gov_token_address: String,
+    /// The parent dao contract address
+    pub parent_dao_contract_address: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -52,9 +38,8 @@ pub enum ExecuteMsg {
         title: String,
         /// A description of the proposal.
         description: String,
-        /// The messages that should be executed in response to this
-        /// proposal passing.
-        msgs: Vec<CosmosMsg<Empty>>,
+        /// The multiple choices.
+        choices: MultipleChoiceOptions,
     },
     /// Votes on a proposal. Voting power is determined by the DAO's
     /// voting power module.
@@ -62,7 +47,7 @@ pub enum ExecuteMsg {
         /// The ID of the proposal to vote on.
         proposal_id: u64,
         /// The senders position on the proposal.
-        vote: Vote,
+        vote: MultipleChoiceVote,
     },
     /// Causes the messages associated with a passed proposal to be
     /// executed by the DAO.
@@ -79,9 +64,9 @@ pub enum ExecuteMsg {
     },
     /// Updates the governance module's config.
     UpdateConfig {
-        /// The new proposal passing threshold. This will only apply
+        /// The new proposal voting strategy. This will only apply
         /// to proposals created after the config update.
-        threshold: Threshold,
+        voting_strategy: VotingStrategy,
         /// The default maximum amount of time a proposal may be voted
         /// on before expiring. This will only apply to proposals
         /// created after the config update.
@@ -90,11 +75,6 @@ pub enum ExecuteMsg {
         /// proposals. Otherwise, any address may execute a passed
         /// proposal. Applies to all outstanding and future proposals.
         only_members_execute: bool,
-        /// Allows changing votes before the proposal expires. If this is
-        /// enabled proposals will not be able to complete early as final
-        /// vote information is not known until the time of proposal
-        /// expiration.
-        allow_revoting: bool,
         /// The address if tge DAO that this governance module is
         /// associated with.
         dao: String,
@@ -117,7 +97,7 @@ pub enum ExecuteMsg {
 }
 
 #[govmod_query]
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     /// Gets the governance module's config. Returns `state::Config`.
@@ -147,6 +127,12 @@ pub enum QueryMsg {
     },
     ProposalHooks {},
     VoteHooks {},
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct VoteMsg {
+    pub proposal_id: u64,
+    pub vote: MultipleChoiceVote,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
