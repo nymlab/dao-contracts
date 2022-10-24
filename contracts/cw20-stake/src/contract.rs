@@ -30,6 +30,7 @@ pub use cw20_base::contract::{
 };
 pub use cw20_base::enumerable::{query_all_accounts, query_all_allowances};
 use cw_controllers::ClaimsResponse;
+use cw_core::{msg::QueryMsg::GetItem, query::GetItemResponse};
 use cw_utils::Duration;
 
 const CONTRACT_NAME: &str = "crates.io:cw20-stake";
@@ -73,8 +74,11 @@ pub fn execute(
 ) -> Result<Response<Empty>, ContractError> {
     match msg {
         ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
-        ExecuteMsg::Unstake { amount } => execute_unstake(deps, env, info, amount),
-        ExecuteMsg::Claim {} => execute_claim(deps, env, info),
+        ExecuteMsg::Unstake {
+            amount,
+            relayed_from,
+        } => execute_unstake(deps, env, info, amount, relayed_from),
+        ExecuteMsg::Claim { relayed_from } => execute_claim(deps, env, info, relayed_from),
         ExecuteMsg::UpdateConfig {
             owner,
             manager,
@@ -198,6 +202,7 @@ pub fn execute_unstake(
     env: Env,
     info: MessageInfo,
     amount: Uint128,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let balance = BALANCE.load(deps.storage).unwrap_or_default();
@@ -207,9 +212,11 @@ pub fn execute_unstake(
         .map_err(StdError::overflow)?
         .checked_div(staked_total)
         .map_err(StdError::divide_by_zero)?;
+    let dao = config.owner.ok_or(ContractError::NoAdminConfigured {})?;
+    let from = get_sender_origin(deps.as_ref(), dao, relayed_from, info.sender)?;
     STAKED_BALANCES.update(
         deps.storage,
-        &info.sender,
+        &from,
         env.block.height,
         |bal| -> StdResult<Uint128> { Ok(bal.unwrap_or_default().checked_sub(amount)?) },
     )?;
@@ -224,11 +231,11 @@ pub fn execute_unstake(
             .checked_sub(amount_to_claim)
             .map_err(StdError::overflow)?,
     )?;
-    let hook_msgs = unstake_hook_msgs(deps.storage, info.sender.clone(), amount)?;
+    let hook_msgs = unstake_hook_msgs(deps.storage, from.clone(), amount)?;
     match config.unstaking_duration {
         None => {
             let cw_send_msg = cw20::Cw20ExecuteMsg::Transfer {
-                recipient: info.sender.to_string(),
+                recipient: from.to_string(),
                 amount: amount_to_claim,
             };
             let wasm_msg = cosmwasm_std::WasmMsg::Execute {
@@ -240,26 +247,26 @@ pub fn execute_unstake(
                 .add_message(wasm_msg)
                 .add_submessages(hook_msgs)
                 .add_attribute("action", "unstake")
-                .add_attribute("from", info.sender)
+                .add_attribute("from", from)
                 .add_attribute("amount", amount)
                 .add_attribute("claim_duration", "None"))
         }
         Some(duration) => {
-            let outstanding_claims = CLAIMS.query_claims(deps.as_ref(), &info.sender)?.claims;
+            let outstanding_claims = CLAIMS.query_claims(deps.as_ref(), &from)?.claims;
             if outstanding_claims.len() >= MAX_CLAIMS as usize {
                 return Err(ContractError::TooManyClaims {});
             }
 
             CLAIMS.create_claim(
                 deps.storage,
-                &info.sender,
+                &from,
                 amount_to_claim,
                 duration.after(&env.block),
             )?;
             Ok(Response::new()
                 .add_attribute("action", "unstake")
                 .add_submessages(hook_msgs)
-                .add_attribute("from", info.sender)
+                .add_attribute("from", from)
                 .add_attribute("amount", amount)
                 .add_attribute("claim_duration", format!("{}", duration)))
         }
@@ -270,14 +277,17 @@ pub fn execute_claim(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
-    let release = CLAIMS.claim_tokens(deps.storage, &info.sender, &_env.block, None)?;
+    let config = CONFIG.load(deps.storage)?;
+    let dao = config.owner.ok_or(ContractError::NoAdminConfigured {})?;
+    let claimer = get_sender_origin(deps.as_ref(), dao, relayed_from, info.sender)?;
+    let release = CLAIMS.claim_tokens(deps.storage, &claimer, &_env.block, None)?;
     if release.is_zero() {
         return Err(ContractError::NothingToClaim {});
     }
-    let config = CONFIG.load(deps.storage)?;
     let cw_send_msg = cw20::Cw20ExecuteMsg::Transfer {
-        recipient: info.sender.to_string(),
+        recipient: claimer.to_string(),
         amount: release,
     };
     let wasm_msg = cosmwasm_std::WasmMsg::Execute {
@@ -288,8 +298,32 @@ pub fn execute_claim(
     Ok(Response::new()
         .add_message(wasm_msg)
         .add_attribute("action", "claim")
-        .add_attribute("from", info.sender)
+        .add_attribute("from", claimer)
         .add_attribute("amount", release))
+}
+
+fn get_sender_origin(
+    deps: Deps,
+    dao: Addr,
+    relayed_from: Option<String>,
+    sender: Addr,
+) -> Result<Addr, ContractError> {
+    match relayed_from {
+        Some(addr) => {
+            let dao_tunnel: GetItemResponse = deps.querier.query_wasm_smart(
+                dao.to_string(),
+                &GetItem {
+                    key: "dao-tunnel".to_string(),
+                },
+            )?;
+            if dao_tunnel.item.is_none() || dao_tunnel.item.unwrap() != sender.to_string() {
+                Err(ContractError::Unauthorized {})
+            } else {
+                Ok(Addr::unchecked(addr))
+            }
+        }
+        None => Ok(sender),
+    }
 }
 
 pub fn execute_fund(
@@ -676,7 +710,10 @@ mod tests {
         info: MessageInfo,
         amount: Uint128,
     ) -> AnyResult<AppResponse> {
-        let msg = ExecuteMsg::Unstake { amount };
+        let msg = ExecuteMsg::Unstake {
+            amount,
+            relayed_from: None,
+        };
         app.execute_contract(info.sender, staking_addr.clone(), &msg, &[])
     }
 
@@ -685,7 +722,7 @@ mod tests {
         staking_addr: &Addr,
         info: MessageInfo,
     ) -> AnyResult<AppResponse> {
-        let msg = ExecuteMsg::Claim {};
+        let msg = ExecuteMsg::Claim { relayed_from: None };
         app.execute_contract(info.sender, staking_addr.clone(), &msg, &[])
     }
 

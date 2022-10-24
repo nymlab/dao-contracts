@@ -1,4 +1,9 @@
-# cw-proposal-single for Vectis
+# cw-proposal-single Vectis
+
+_Similar to the VectisDAO version of the cw20-stake contract,
+this version of proposal module allows for the dao-tunnel in [VectisDAO] to forward a remote chain `from` argument._
+
+[vectisdao]: https://github.com/nymlab/vectis
 
 A proposal module for a DAO DAO DAO which supports simple "yes", "no",
 "abstain" voting. Proposals may have associated messages which will be

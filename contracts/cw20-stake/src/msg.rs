@@ -23,8 +23,11 @@ pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
     Unstake {
         amount: Uint128,
+        relayed_from: Option<String>,
     },
-    Claim {},
+    Claim {
+        relayed_from: Option<String>,
+    },
     UpdateConfig {
         owner: Option<String>,
         manager: Option<String>,

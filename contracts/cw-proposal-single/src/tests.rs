@@ -602,6 +602,7 @@ where
             title: "A simple text proposal".to_string(),
             description: "This is a simple text proposal".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -622,6 +623,7 @@ where
             &ExecuteMsg::Vote {
                 proposal_id: 1,
                 vote: position,
+                relayed_from: None,
             },
             &[],
         );
@@ -752,6 +754,7 @@ fn test_propose() {
             title: "A simple text proposal".to_string(),
             description: "This is a simple text proposal".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -827,6 +830,7 @@ fn test_propose_supports_stargate_message() {
                 type_url: "foo_type".to_string(),
                 value: to_binary("foo_bin").unwrap(),
             }],
+            relayed_from: None,
         },
         &[],
     )
@@ -1175,6 +1179,7 @@ fn test_take_proposal_deposit() {
             title: "A simple text proposal".to_string(),
             description: "This is a simple text proposal".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -1201,6 +1206,7 @@ fn test_take_proposal_deposit() {
             title: "A simple text proposal".to_string(),
             description: "This is a simple text proposal".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -1275,7 +1281,10 @@ fn test_deposit_return_on_execute() {
     app.execute_contract(
         Addr::unchecked("ekez"),
         govmod_single,
-        &ExecuteMsg::Execute { proposal_id: 1 },
+        &ExecuteMsg::Execute {
+            proposal_id: 1,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap();
@@ -1508,6 +1517,7 @@ fn test_execute_expired_proposal() {
             title: "This proposal will expire.".to_string(),
             description: "What will happen?".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -1518,6 +1528,7 @@ fn test_execute_expired_proposal() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -1561,7 +1572,10 @@ fn test_execute_expired_proposal() {
     app.execute_contract(
         Addr::unchecked("ekez"),
         proposal_single.clone(),
-        &ExecuteMsg::Execute { proposal_id: 1 },
+        &ExecuteMsg::Execute {
+            proposal_id: 1,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap();
@@ -1570,7 +1584,10 @@ fn test_execute_expired_proposal() {
     app.execute_contract(
         Addr::unchecked("ekez"),
         proposal_single.clone(),
-        &ExecuteMsg::Execute { proposal_id: 1 },
+        &ExecuteMsg::Execute {
+            proposal_id: 1,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap_err();
@@ -1809,6 +1826,7 @@ fn test_query_list_proposals() {
                 title: format!("Text proposal {}.", i),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2161,6 +2179,7 @@ fn test_active_threshold_absolute() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2185,6 +2204,7 @@ fn test_active_threshold_absolute() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2193,6 +2213,7 @@ fn test_active_threshold_absolute() {
     // Unstake some tokens to make it inactive again
     let msg = cw20_stake::msg::ExecuteMsg::Unstake {
         amount: Uint128::new(50),
+        relayed_from: None,
     };
     app.execute_contract(Addr::unchecked(CREATOR_ADDR), staking_contract, &msg, &[])
         .unwrap();
@@ -2207,6 +2228,7 @@ fn test_active_threshold_absolute() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2288,6 +2310,7 @@ fn test_active_threshold_percent() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2312,6 +2335,7 @@ fn test_active_threshold_percent() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2320,6 +2344,7 @@ fn test_active_threshold_percent() {
     // Unstake some tokens to make it inactive again
     let msg = cw20_stake::msg::ExecuteMsg::Unstake {
         amount: Uint128::new(1000),
+        relayed_from: None,
     };
     app.execute_contract(Addr::unchecked(CREATOR_ADDR), staking_contract, &msg, &[])
         .unwrap();
@@ -2334,6 +2359,7 @@ fn test_active_threshold_percent() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2417,6 +2443,7 @@ fn test_active_threshold_none() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2462,6 +2489,7 @@ fn test_active_threshold_none() {
                 title: "A simple text proposal".to_string(),
                 description: "This is a simple text proposal".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
             &[],
         )
@@ -2515,6 +2543,7 @@ fn test_revoting() {
             title: "Supreme galactic floob.".to_string(),
             description: "Recognize the supreme galactic floob as our DAO leader.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -2528,6 +2557,7 @@ fn test_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -2542,6 +2572,7 @@ fn test_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -2560,6 +2591,7 @@ fn test_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -2639,6 +2671,7 @@ fn test_allow_revoting_config_changes() {
             title: "Supreme galactic floob.".to_string(),
             description: "Recognize the supreme galactic floob as our DAO leader.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -2679,6 +2712,7 @@ fn test_allow_revoting_config_changes() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -2690,6 +2724,7 @@ fn test_allow_revoting_config_changes() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -2703,6 +2738,7 @@ fn test_allow_revoting_config_changes() {
             title: "Supreme galactic floob.".to_string(),
             description: "Recognize the supreme galactic floob as our DAO leader.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -2714,6 +2750,7 @@ fn test_allow_revoting_config_changes() {
         &ExecuteMsg::Vote {
             proposal_id: 2,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -2726,6 +2763,7 @@ fn test_allow_revoting_config_changes() {
             &ExecuteMsg::Vote {
                 proposal_id: 2,
                 vote: Vote::Yes,
+                relayed_from: None,
             },
             &[],
         )
@@ -2781,6 +2819,7 @@ fn test_revoting_same_vote_twice() {
             title: "Supreme galactic floob.".to_string(),
             description: "Recognize the supreme galactic floob as our DAO leader.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -2792,6 +2831,7 @@ fn test_revoting_same_vote_twice() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -2804,6 +2844,7 @@ fn test_revoting_same_vote_twice() {
             &ExecuteMsg::Vote {
                 proposal_id: 1,
                 vote: Vote::Yes,
+                relayed_from: None,
             },
             &[],
         )
@@ -2823,6 +2864,7 @@ fn test_revoting_same_vote_twice() {
             &ExecuteMsg::Vote {
                 proposal_id: 1,
                 vote: Vote::No,
+                relayed_from: None,
             },
             &[],
         )
@@ -2833,6 +2875,7 @@ fn test_revoting_same_vote_twice() {
             &ExecuteMsg::Vote {
                 proposal_id: 1,
                 vote: Vote::Yes,
+                relayed_from: None,
             },
             &[],
         )
@@ -2895,6 +2938,7 @@ fn test_three_of_five_multisig() {
             title: "Propose a thing.".to_string(),
             description: "Do the thing.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -2906,6 +2950,7 @@ fn test_three_of_five_multisig() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -2916,6 +2961,7 @@ fn test_three_of_five_multisig() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -2937,6 +2983,7 @@ fn test_three_of_five_multisig() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -2954,7 +3001,10 @@ fn test_three_of_five_multisig() {
     app.execute_contract(
         Addr::unchecked("four"),
         proposal_module.clone(),
-        &ExecuteMsg::Execute { proposal_id: 1 },
+        &ExecuteMsg::Execute {
+            proposal_id: 1,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap();
@@ -3021,6 +3071,7 @@ fn test_three_of_five_multisig_reject() {
             title: "Propose a thing.".to_string(),
             description: "Do the thing.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -3032,6 +3083,7 @@ fn test_three_of_five_multisig_reject() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3042,6 +3094,7 @@ fn test_three_of_five_multisig_reject() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -3053,6 +3106,7 @@ fn test_three_of_five_multisig_reject() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -3064,6 +3118,7 @@ fn test_three_of_five_multisig_reject() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -3192,6 +3247,7 @@ fn test_three_of_five_multisig_revoting() {
             title: "Propose a thing.".to_string(),
             description: "Do the thing.".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -3203,6 +3259,7 @@ fn test_three_of_five_multisig_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3213,6 +3270,7 @@ fn test_three_of_five_multisig_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3224,6 +3282,7 @@ fn test_three_of_five_multisig_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3235,6 +3294,7 @@ fn test_three_of_five_multisig_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )
@@ -3257,6 +3317,7 @@ fn test_three_of_five_multisig_revoting() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3276,7 +3337,10 @@ fn test_three_of_five_multisig_revoting() {
     app.execute_contract(
         Addr::unchecked("four"),
         proposal_module.clone(),
-        &ExecuteMsg::Execute { proposal_id: 1 },
+        &ExecuteMsg::Execute {
+            proposal_id: 1,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap();
@@ -3520,6 +3584,7 @@ fn test_no_early_pass_with_min_duration() {
             title: "A simple text proposal".to_string(),
             description: "This is a simple text proposal".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -3533,6 +3598,7 @@ fn test_no_early_pass_with_min_duration() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3671,6 +3737,7 @@ fn test_min_duration_same_as_proposal_duration() {
             title: "A simple text proposal".to_string(),
             description: "This is a simple text proposal".to_string(),
             msgs: vec![],
+            relayed_from: None,
         },
         &[],
     )
@@ -3684,6 +3751,7 @@ fn test_min_duration_same_as_proposal_duration() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::Yes,
+            relayed_from: None,
         },
         &[],
     )
@@ -3706,6 +3774,7 @@ fn test_min_duration_same_as_proposal_duration() {
         &ExecuteMsg::Vote {
             proposal_id: 1,
             vote: Vote::No,
+            relayed_from: None,
         },
         &[],
     )

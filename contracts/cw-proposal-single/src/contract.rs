@@ -24,7 +24,7 @@ use crate::{
         get_deposit_msg, get_return_deposit_msg, Ballot, Config, BALLOTS, CONFIG, PROPOSALS,
         PROPOSAL_COUNT, PROPOSAL_HOOKS, VOTE_HOOKS,
     },
-    utils::{get_total_power, get_voting_power, validate_voting_period},
+    utils::{get_sender_origin, get_total_power, get_voting_power, validate_voting_period},
 };
 
 const CONTRACT_NAME: &str = "crates.io:cw-govmod-single";
@@ -86,9 +86,25 @@ pub fn execute(
             title,
             description,
             msgs,
-        } => execute_propose(deps, env, info.sender, title, description, msgs),
-        ExecuteMsg::Vote { proposal_id, vote } => execute_vote(deps, env, info, proposal_id, vote),
-        ExecuteMsg::Execute { proposal_id } => execute_execute(deps, env, info, proposal_id),
+            relayed_from,
+        } => execute_propose(
+            deps,
+            env,
+            info.sender,
+            title,
+            description,
+            msgs,
+            relayed_from,
+        ),
+        ExecuteMsg::Vote {
+            proposal_id,
+            vote,
+            relayed_from,
+        } => execute_vote(deps, env, info, proposal_id, vote, relayed_from),
+        ExecuteMsg::Execute {
+            proposal_id,
+            relayed_from,
+        } => execute_execute(deps, env, info, proposal_id, relayed_from),
         ExecuteMsg::Close { proposal_id } => execute_close(deps, env, info, proposal_id),
         ExecuteMsg::UpdateConfig {
             threshold,
@@ -129,8 +145,11 @@ pub fn execute_propose(
     title: String,
     description: String,
     msgs: Vec<CosmosMsg<Empty>>,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
+
+    let proposer = get_sender_origin(deps.as_ref(), config.dao.clone(), relayed_from, sender)?;
 
     let voting_module: Addr = deps
         .querier
@@ -153,7 +172,7 @@ pub fn execute_propose(
     // Check that the sender is a member of the governance contract.
     let sender_power = get_voting_power(
         deps.as_ref(),
-        sender.clone(),
+        proposer.clone(),
         config.dao.clone(),
         Some(env.block.height),
     )?;
@@ -170,7 +189,7 @@ pub fn execute_propose(
         let mut proposal = Proposal {
             title,
             description,
-            proposer: sender.clone(),
+            proposer: proposer.clone(),
             start_height: env.block.height,
             min_voting_period: config.min_voting_period.map(|min| min.after(&env.block)),
             expiration,
@@ -213,13 +232,13 @@ pub fn execute_propose(
 
     PROPOSALS.save(deps.storage, id, &proposal)?;
 
-    let deposit_msg = get_deposit_msg(&config.deposit_info, &env.contract.address, &sender)?;
+    let deposit_msg = get_deposit_msg(&config.deposit_info, &env.contract.address, &proposer)?;
     let hooks = new_proposal_hooks(PROPOSAL_HOOKS, deps.storage, id)?;
     Ok(Response::default()
         .add_messages(deposit_msg)
         .add_submessages(hooks)
         .add_attribute("action", "propose")
-        .add_attribute("sender", sender)
+        .add_attribute("proposer", proposer)
         .add_attribute("proposal_id", id.to_string())
         .add_attribute("status", proposal.status.to_string()))
 }
@@ -229,10 +248,12 @@ pub fn execute_execute(
     env: Env,
     info: MessageInfo,
     proposal_id: u64,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
+    let sender = get_sender_origin(deps.as_ref(), config.dao.clone(), relayed_from, info.sender)?;
     if config.only_members_execute {
-        let power = get_voting_power(deps.as_ref(), info.sender.clone(), config.dao.clone(), None)?;
+        let power = get_voting_power(deps.as_ref(), sender.clone(), config.dao.clone(), None)?;
         if power.is_zero() {
             return Err(ContractError::Unauthorized {});
         }
@@ -281,7 +302,7 @@ pub fn execute_execute(
         .add_messages(refund_message)
         .add_submessages(hooks)
         .add_attribute("action", "execute")
-        .add_attribute("sender", info.sender)
+        .add_attribute("sender", sender)
         .add_attribute("proposal_id", proposal_id.to_string())
         .add_attribute("dao", config.dao))
 }
@@ -292,8 +313,11 @@ pub fn execute_vote(
     info: MessageInfo,
     proposal_id: u64,
     vote: Vote,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
+    let sender = get_sender_origin(deps.as_ref(), config.dao.clone(), relayed_from, info.sender)?;
+
     let mut prop = PROPOSALS
         .may_load(deps.storage, proposal_id)?
         .ok_or(ContractError::NoSuchProposal { id: proposal_id })?;
@@ -303,7 +327,7 @@ pub fn execute_vote(
 
     let vote_power = get_voting_power(
         deps.as_ref(),
-        info.sender.clone(),
+        sender.clone(),
         config.dao,
         Some(prop.start_height),
     )?;
@@ -314,7 +338,7 @@ pub fn execute_vote(
     let mut previous_ballot = None;
     BALLOTS.update(
         deps.storage,
-        (proposal_id, info.sender.clone()),
+        (proposal_id, sender.clone()),
         |bal| match bal {
             Some(current_ballot) => {
                 if prop.allow_revoting {
@@ -365,14 +389,14 @@ pub fn execute_vote(
         VOTE_HOOKS,
         deps.storage,
         proposal_id,
-        info.sender.to_string(),
+        sender.to_string(),
         vote.to_string(),
     )?;
     Ok(Response::default()
         .add_submessages(change_hooks)
         .add_submessages(vote_hooks)
         .add_attribute("action", "vote")
-        .add_attribute("sender", info.sender)
+        .add_attribute("sender", sender)
         .add_attribute("proposal_id", proposal_id.to_string())
         .add_attribute("position", vote.to_string())
         .add_attribute("status", prop.status.to_string()))

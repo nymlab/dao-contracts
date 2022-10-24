@@ -1,4 +1,5 @@
 use cosmwasm_std::{Addr, Deps, StdResult, Uint128};
+use cw_core;
 
 use cw_core_interface::voting;
 use cw_utils::Duration;
@@ -50,4 +51,28 @@ pub fn validate_voting_period(
         .transpose()?;
 
     Ok((min, max))
+}
+
+pub fn get_sender_origin(
+    deps: Deps,
+    dao: Addr,
+    relayed_from: Option<String>,
+    sender: Addr,
+) -> Result<Addr, ContractError> {
+    match relayed_from {
+        Some(addr) => {
+            let dao_tunnel: cw_core::query::GetItemResponse = deps.querier.query_wasm_smart(
+                dao.to_string(),
+                &cw_core::msg::QueryMsg::GetItem {
+                    key: "dao-tunnel".to_string(),
+                },
+            )?;
+            if dao_tunnel.item.is_none() || dao_tunnel.item.unwrap() != sender.to_string() {
+                Err(ContractError::Unauthorized {})
+            } else {
+                Ok(Addr::unchecked(addr))
+            }
+        }
+        None => Ok(sender),
+    }
 }

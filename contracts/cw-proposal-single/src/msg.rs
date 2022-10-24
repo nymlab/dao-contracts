@@ -74,6 +74,8 @@ pub enum ExecuteMsg {
         /// The messages that should be executed in response to this
         /// proposal passing.
         msgs: Vec<CosmosMsg<Empty>>,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Votes on a proposal. Voting power is determined by the DAO's
     /// voting power module.
@@ -82,12 +84,16 @@ pub enum ExecuteMsg {
         proposal_id: u64,
         /// The senders position on the proposal.
         vote: voting::Vote,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Causes the messages associated with a passed proposal to be
     /// executed by the DAO.
     Execute {
         /// The ID of the proposal to execute.
         proposal_id: u64,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Closes a proposal that has failed (either not passed or timed
     /// out). If applicable this will cause the proposal deposit
