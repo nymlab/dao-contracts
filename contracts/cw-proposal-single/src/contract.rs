@@ -105,7 +105,10 @@ pub fn execute(
             proposal_id,
             relayed_from,
         } => execute_execute(deps, env, info, proposal_id, relayed_from),
-        ExecuteMsg::Close { proposal_id } => execute_close(deps, env, info, proposal_id),
+        ExecuteMsg::Close {
+            proposal_id,
+            relayed_from,
+        } => execute_close(deps, env, info, proposal_id, relayed_from),
         ExecuteMsg::UpdateConfig {
             threshold,
             max_voting_period,
@@ -407,6 +410,7 @@ pub fn execute_close(
     env: Env,
     info: MessageInfo,
     proposal_id: u64,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let mut prop = PROPOSALS.load(deps.storage, proposal_id)?;
 
@@ -441,10 +445,13 @@ pub fn execute_close(
         prop.status.to_string(),
     )?;
 
+    let config = CONFIG.load(deps.storage)?;
+    let sender = get_sender_origin(deps.as_ref(), config.dao, relayed_from, info.sender)?;
+
     Ok(Response::default()
         .add_submessages(changed_hooks)
         .add_attribute("action", "close")
-        .add_attribute("sender", info.sender)
+        .add_attribute("sender", sender)
         .add_messages(refund_message)
         .add_attribute("proposal_id", proposal_id.to_string()))
 }

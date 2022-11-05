@@ -101,6 +101,8 @@ pub enum ExecuteMsg {
     Close {
         /// The ID of the proposal to close.
         proposal_id: u64,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Updates the governance module's config.
     UpdateConfig {
