@@ -5,6 +5,8 @@ this version of proposal module allows for the dao-tunnel in [VectisDAO] to forw
 
 Another change is that the v1 addes a message (fire and forget) for requesting deposit from the proposer.
 This means that proposals can be created without a deposit.
+This is already addressed in v2 `pre-proposal` contracts.
+
 This fork updates that to call `ProposalTransfer` in vectis-govec contract and the reply is handled.
 
 [vectisdao]: https://github.com/nymlab/vectis

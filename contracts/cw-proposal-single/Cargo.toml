@@ -58,5 +58,5 @@ cw20-stake = { path= "../cw20-stake", version = "*" }
 cw20-base = "0.13"
 cw4 = "0.13"
 cw4-group = "0.13"
-vectis-govec = {path = "../../../vectis/contracts/govec"}
+vectis-govec = {git = "https://github.com/nymlab/vectis", rev = "ab5f6087852f26159"}
 
