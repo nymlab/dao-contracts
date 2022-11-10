@@ -27,6 +27,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dea908e7347a8c64e378c17e30ef880ad73e3b4498346b055c2c00ea342f3179"
 
 [[package]]
+name = "bech32"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
+
+[[package]]
 name = "block-buffer"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -83,12 +89,26 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-schema"
-version = "1.0.0"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "772e80bbad231a47a2068812b723a1ff81dd4a0d56c9391ac748177bea3a61da"
+checksum = "a227cfeb9a7152b26a354b1c990e930e962f75fd68f57ab5ae2ef888c8524292"
 dependencies = [
+ "cosmwasm-schema-derive",
  "schemars",
+ "serde",
  "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "cosmwasm-schema-derive"
+version = "1.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3626cb42eef870de67f791e873711255325224d86f281bf628c42abd295f3a14"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -189,10 +209,10 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core-interface",
- "cw-core-macros",
+ "cw-core-interface 0.1.0",
+ "cw-core-macros 0.1.0",
  "cw-multi-test 0.13.4 (git+https://github.com/CosmWasm/cw-plus?branch=main)",
- "cw-paginate",
+ "cw-paginate 0.1.0",
  "cw-proposal-sudo",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -208,12 +228,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-core"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-core-interface 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-core-macros 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-paginate 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw2",
+ "cw20",
+ "cw721",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw-core-interface"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-core-macros",
+ "cw-core-macros 0.1.0",
+ "cw2",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "cw-core-interface"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "cw-core-macros 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
  "cw2",
  "schemars",
  "serde",
@@ -228,6 +280,16 @@ dependencies = [
  "quote",
  "schemars",
  "serde",
+ "syn",
+]
+
+[[package]]
+name = "cw-core-macros"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "proc-macro2",
+ "quote",
  "syn",
 ]
 
@@ -313,15 +375,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-paginate"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
+]
+
+[[package]]
 name = "cw-proposal-single"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core",
- "cw-core-interface",
- "cw-core-macros",
+ "cw-core 0.1.0",
+ "cw-core-interface 0.1.0",
+ "cw-core-macros 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -329,20 +402,45 @@ dependencies = [
  "cw20",
  "cw20-balance-voting",
  "cw20-base",
- "cw20-stake",
+ "cw20-stake 0.2.6",
  "cw20-staked-balance-voting",
  "cw3",
  "cw4",
  "cw4-group",
  "cw4-voting",
- "indexable-hooks",
- "proposal-hooks",
+ "indexable-hooks 0.1.0",
+ "proposal-hooks 0.1.0",
  "schemars",
  "serde",
  "testing",
  "thiserror",
- "vote-hooks",
- "voting",
+ "vectis-govec",
+ "vote-hooks 0.1.0",
+ "voting 0.1.0",
+]
+
+[[package]]
+name = "cw-proposal-single"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-core 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-core-interface 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-core-macros 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw2",
+ "cw20",
+ "cw3",
+ "indexable-hooks 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "proposal-hooks 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "schemars",
+ "serde",
+ "thiserror",
+ "vote-hooks 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "voting 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
 ]
 
 [[package]]
@@ -352,8 +450,8 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core-interface",
- "cw-core-macros",
+ "cw-core-interface 0.1.0",
+ "cw-core-macros 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw2",
@@ -385,6 +483,18 @@ dependencies = [
 
 [[package]]
 name = "cw-utils"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef842a1792e4285beff7b3b518705f760fa4111dc1e296e53f3e92d1ef7f6220"
+dependencies = [
+ "cosmwasm-std",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw-utils"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9dbaecb78c8e8abfd6b4258c7f4fbeb5c49a5e45ee4d910d3240ee8e1d714e1b"
@@ -404,6 +514,17 @@ dependencies = [
  "schemars",
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "cw1"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "362649aa18f898ff8a7a18f2bfc5568e9ba56417f3c9ce0e01bc32ccb2e125e0"
+dependencies = [
+ "cosmwasm-std",
+ "schemars",
+ "serde",
 ]
 
 [[package]]
@@ -437,8 +558,8 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core-interface",
- "cw-core-macros",
+ "cw-core-interface 0.1.0",
+ "cw-core-macros 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -475,8 +596,45 @@ dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
  "cw-controllers",
- "cw-core",
+ "cw-core 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw20-stake"
+version = "0.2.6"
+source = "git+https://github.com/DA0-DA0/dao-contracts.git?tag=v1.0.0#e531c760a5d057329afd98d62567aaa4dca2c96f"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-controllers",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw20-stake"
+version = "0.2.6"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-controllers",
+ "cw-core 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw2",
@@ -494,15 +652,15 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core-interface",
- "cw-core-macros",
+ "cw-core-interface 0.1.0",
+ "cw-core-macros 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw2",
  "cw20",
  "cw20-base",
- "cw20-stake",
+ "cw20-stake 0.2.6",
  "schemars",
  "serde",
  "thiserror",
@@ -556,8 +714,8 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core-interface",
- "cw-core-macros",
+ "cw-core-interface 0.1.0",
+ "cw-core-macros 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -694,6 +852,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixed-hash"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfcf0ed7fe52a17a03854ec54a9f76d6d84508d1c0e66bc1793301c73fc8493c"
+dependencies = [
+ "byteorder",
+ "static_assertions",
+]
+
+[[package]]
 name = "forward_ref"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -770,6 +938,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "indexable-hooks"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -827,6 +1007,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 
 [[package]]
+name = "primitive-types"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05e4722c697a58a99d5d06a08c30821d7c082a4632198de1eaa5a6c22ef42373"
+dependencies = [
+ "fixed-hash",
+ "uint",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -840,7 +1030,18 @@ name = "proposal-hooks"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-std",
- "indexable-hooks",
+ "indexable-hooks 0.1.0",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "proposal-hooks"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "indexable-hooks 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
  "schemars",
  "serde",
 ]
@@ -852,22 +1053,22 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cosmwasm-storage",
- "cw-core",
+ "cw-core 0.1.0",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "cw-proposal-single",
+ "cw-proposal-single 0.1.0",
  "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cw2",
  "cw20",
  "cw20-balance-voting",
  "cw20-base",
- "indexable-hooks",
- "proposal-hooks",
+ "indexable-hooks 0.1.0",
+ "proposal-hooks 0.1.0",
  "schemars",
  "serde",
  "thiserror",
- "vote-hooks",
- "voting",
+ "vote-hooks 0.1.0",
+ "voting 0.1.0",
 ]
 
 [[package]]
@@ -950,6 +1151,17 @@ dependencies = [
  "crypto-bigint",
  "hmac",
  "zeroize",
+]
+
+[[package]]
+name = "ripemd160"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2eca4ecc81b7f313189bf73ce724400a07da2a6dac19588b03c8bd76a2dcc251"
+dependencies = [
+ "block-buffer",
+ "digest",
+ "opaque-debug",
 ]
 
 [[package]]
@@ -1094,7 +1306,7 @@ dependencies = [
  "cw2",
  "cw20",
  "cw20-base",
- "cw20-stake",
+ "cw20-stake 0.2.6",
  "schemars",
  "serde",
  "thiserror",
@@ -1113,7 +1325,7 @@ dependencies = [
  "cw2",
  "cw20",
  "cw20-base",
- "cw20-stake",
+ "cw20-stake 0.2.6",
  "schemars",
  "serde",
  "thiserror",
@@ -1149,7 +1361,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
- "voting",
+ "voting 0.1.0",
 ]
 
 [[package]]
@@ -1197,6 +1409,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bd2fe26506023ed7b5e1e315add59d6f584c621d037f9368fea9cfb988f368c"
 
 [[package]]
+name = "vectis-govec"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw-utils 0.11.1",
+ "cw1",
+ "cw2",
+ "cw20",
+ "cw20-stake 0.2.6 (git+https://github.com/DA0-DA0/dao-contracts.git?tag=v1.0.0)",
+ "derivative",
+ "hex",
+ "thiserror",
+ "vectis-wallet",
+]
+
+[[package]]
+name = "vectis-wallet"
+version = "0.1.0"
+dependencies = [
+ "bech32",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-proposal-single 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "cw-utils 0.13.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cw2",
+ "cw20",
+ "cw20-stake 0.2.6 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
+ "hex",
+ "primitive-types",
+ "ripemd160",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
 name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1207,7 +1456,18 @@ name = "vote-hooks"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-std",
- "indexable-hooks",
+ "indexable-hooks 0.1.0",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "vote-hooks"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
+dependencies = [
+ "cosmwasm-std",
+ "indexable-hooks 0.1.0 (git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad)",
  "schemars",
  "serde",
 ]
@@ -1215,6 +1475,17 @@ dependencies = [
 [[package]]
 name = "voting"
 version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "voting"
+version = "0.1.0"
+source = "git+https://github.com/nymlab/dao-contracts?rev=b82db3243688a5e6ad#b82db3243688a5e6adae1ef9846b2061439d372e"
 dependencies = [
  "cosmwasm-std",
  "schemars",

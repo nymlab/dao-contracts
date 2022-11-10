@@ -27,6 +27,9 @@ pub enum ContractError {
     #[error("Proposal is ({size}) bytes, must be <= ({max}) bytes")]
     ProposalTooLarge { size: u64, max: u64 },
 
+    #[error("Desposit is required for proposal")]
+    Deposit,
+
     #[error("Proposal is not open ({id})")]
     NotOpen { id: u64 },
 

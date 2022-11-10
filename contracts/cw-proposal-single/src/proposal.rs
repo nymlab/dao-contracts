@@ -1,4 +1,6 @@
-use cosmwasm_std::{Addr, BlockInfo, CosmosMsg, Decimal, Empty, StdResult, Storage, Uint128};
+use cosmwasm_std::{
+    Addr, BlockInfo, CosmosMsg, Decimal, Empty, StdError, StdResult, Storage, Uint128,
+};
 use cw_utils::Expiration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -45,6 +47,9 @@ pub struct Proposal {
 
 pub fn advance_proposal_id(store: &mut dyn Storage) -> StdResult<u64> {
     let id: u64 = PROPOSAL_COUNT.load(store)? + 1;
+    if id == u64::MAX {
+        return Err(StdError::generic_err("Proposal ID Overflow"));
+    }
     PROPOSAL_COUNT.save(store, &id)?;
     Ok(id)
 }

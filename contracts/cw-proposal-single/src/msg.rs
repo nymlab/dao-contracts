@@ -184,3 +184,11 @@ pub enum QueryMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct MigrateMsg {}
+
+/// This is from vectis-wallet GovecExecuteMsg
+/// We are not importing the library because of dependency conflicts
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum GovecExecuteMsg {
+    ProposalTransfer { proposer: String, deposit: Uint128 },
+}

@@ -3,6 +3,10 @@
 _Similar to the VectisDAO version of the cw20-stake contract,
 this version of proposal module allows for the dao-tunnel in [VectisDAO] to forward a remote chain `from` argument._
 
+Another change is that the v1 addes a message (fire and forget) for requesting deposit from the proposer.
+This means that proposals can be created without a deposit.
+This fork updates that to call `ProposalTransfer` in vectis-govec contract and the reply is handled.
+
 [vectisdao]: https://github.com/nymlab/vectis
 
 A proposal module for a DAO DAO DAO which supports simple "yes", "no",

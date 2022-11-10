@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, CosmosMsg, Deps, StdResult, Uint128, WasmMsg};
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, Deps, StdResult, SubMsg, Uint128, WasmMsg};
 use cw_storage_plus::{Item, Map};
 use cw_utils::Duration;
 
@@ -9,9 +9,12 @@ use serde::{Deserialize, Serialize};
 use voting::{Threshold, Vote};
 
 use crate::{
-    msg::{DepositInfo, DepositToken},
+    msg::{DepositInfo, DepositToken, GovecExecuteMsg},
     proposal::Proposal,
 };
+
+/// ProposalTransfer Reply ID
+pub const DEPOSIT_REPLY: u64 = u64::MAX;
 
 /// Counterpart to the `DepositInfo` struct which has been processed.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -114,28 +117,27 @@ impl DepositInfo {
 
 pub fn get_deposit_msg(
     info: &Option<CheckedDepositInfo>,
-    contract: &Addr,
     sender: &Addr,
-) -> StdResult<Vec<CosmosMsg>> {
+) -> StdResult<Option<SubMsg>> {
     match info {
         Some(info) => {
             if info.deposit.is_zero() {
-                Ok(vec![])
+                Ok(None)
             } else {
                 let transfer_msg = WasmMsg::Execute {
                     contract_addr: info.token.to_string(),
                     funds: vec![],
-                    msg: to_binary(&cw20::Cw20ExecuteMsg::TransferFrom {
-                        owner: sender.to_string(),
-                        recipient: contract.to_string(),
-                        amount: info.deposit,
+                    msg: to_binary(&GovecExecuteMsg::ProposalTransfer {
+                        proposer: sender.to_string(),
+                        deposit: info.deposit,
                     })?,
                 };
-                let transfer_msg: CosmosMsg = transfer_msg.into();
-                Ok(vec![transfer_msg])
+                let sub_msg =
+                    SubMsg::reply_on_error(CosmosMsg::<_>::from(transfer_msg), DEPOSIT_REPLY);
+                Ok(Some(sub_msg))
             }
         }
-        None => Ok(vec![]),
+        None => Ok(None),
     }
 }
 

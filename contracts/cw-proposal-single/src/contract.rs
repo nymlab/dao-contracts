@@ -21,8 +21,8 @@ use crate::{
     query::ProposalListResponse,
     query::{ProposalResponse, VoteInfo, VoteListResponse, VoteResponse},
     state::{
-        get_deposit_msg, get_return_deposit_msg, Ballot, Config, BALLOTS, CONFIG, PROPOSALS,
-        PROPOSAL_COUNT, PROPOSAL_HOOKS, VOTE_HOOKS,
+        get_deposit_msg, get_return_deposit_msg, Ballot, Config, BALLOTS, CONFIG, DEPOSIT_REPLY,
+        PROPOSALS, PROPOSAL_COUNT, PROPOSAL_HOOKS, VOTE_HOOKS,
     },
     utils::{get_sender_origin, get_total_power, get_voting_power, validate_voting_period},
 };
@@ -235,11 +235,13 @@ pub fn execute_propose(
 
     PROPOSALS.save(deps.storage, id, &proposal)?;
 
-    let deposit_msg = get_deposit_msg(&config.deposit_info, &env.contract.address, &proposer)?;
-    let hooks = new_proposal_hooks(PROPOSAL_HOOKS, deps.storage, id)?;
+    let mut submsgs = new_proposal_hooks(PROPOSAL_HOOKS, deps.storage, id)?;
+    if let Some(deposit_msg) = get_deposit_msg(&config.deposit_info, &proposer)? {
+        submsgs.push(deposit_msg);
+    }
+
     Ok(Response::default()
-        .add_messages(deposit_msg)
-        .add_submessages(hooks)
+        .add_submessages(submsgs)
         .add_attribute("action", "propose")
         .add_attribute("proposer", proposer)
         .add_attribute("proposal_id", id.to_string())
@@ -738,7 +740,11 @@ pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, 
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
-    if msg.id % 2 == 0 {
+    if msg.id == DEPOSIT_REPLY {
+        // We prevent proposals from being created without meeting deposit requirement
+        println!("Err {:?}", msg.result.unwrap_err());
+        Err(ContractError::Deposit)
+    } else if msg.id % 2 == 0 {
         // Proposal hook so we can just divide by two for index
         let idx = msg.id / 2;
         PROPOSAL_HOOKS.remove_hook_by_index(deps.storage, idx)?;
