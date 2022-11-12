@@ -257,7 +257,7 @@ pub fn query_voting_power_at_height(
     height: Option<u64>,
 ) -> StdResult<Binary> {
     let staking_contract = STAKING_CONTRACT.load(deps.storage)?;
-    let address = deps.api.addr_validate(&address)?;
+    let address = Addr::unchecked(&address);
     let res: cw20_stake::msg::StakedBalanceAtHeightResponse = deps.querier.query_wasm_smart(
         staking_contract,
         &cw20_stake::msg::QueryMsg::StakedBalanceAtHeight {

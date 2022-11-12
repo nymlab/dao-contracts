@@ -148,7 +148,7 @@ pub fn execute_receive(
         });
     }
     let msg: ReceiveMsg = from_binary(&wrapper.msg)?;
-    let sender = deps.api.addr_validate(&wrapper.sender)?;
+    let sender = Addr::unchecked(&wrapper.sender);
     match msg {
         ReceiveMsg::Stake {} => execute_stake(deps, env, sender, wrapper.amount),
         ReceiveMsg::Fund {} => execute_fund(deps, env, &sender, wrapper.amount),
@@ -400,7 +400,7 @@ pub fn query_staked_balance_at_height(
     address: String,
     height: Option<u64>,
 ) -> StdResult<StakedBalanceAtHeightResponse> {
-    let address = deps.api.addr_validate(&address)?;
+    let address = Addr::unchecked(&address);
     let height = height.unwrap_or(_env.block.height);
     let balance = STAKED_BALANCES
         .may_load_at_height(deps.storage, &address, height)?
@@ -425,7 +425,7 @@ pub fn query_staked_value(
     _env: Env,
     address: String,
 ) -> StdResult<StakedValueResponse> {
-    let address = deps.api.addr_validate(&address)?;
+    let address = Addr::unchecked(&address);
     let balance = BALANCE.load(deps.storage).unwrap_or_default();
     let staked = STAKED_BALANCES
         .load(deps.storage, &address)
@@ -461,7 +461,7 @@ pub fn query_config(deps: Deps) -> StdResult<GetConfigResponse> {
 }
 
 pub fn query_claims(deps: Deps, address: String) -> StdResult<ClaimsResponse> {
-    CLAIMS.query_claims(deps, &deps.api.addr_validate(&address)?)
+    CLAIMS.query_claims(deps, &Addr::unchecked(&address))
 }
 
 pub fn query_hooks(deps: Deps) -> StdResult<GetHooksResponse> {

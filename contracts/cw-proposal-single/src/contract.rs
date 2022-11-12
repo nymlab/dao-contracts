@@ -688,7 +688,7 @@ pub fn query_proposal_count(deps: Deps) -> StdResult<Binary> {
 }
 
 pub fn query_vote(deps: Deps, proposal_id: u64, voter: String) -> StdResult<Binary> {
-    let voter = deps.api.addr_validate(&voter)?;
+    let voter = Addr::unchecked(&voter);
     let ballot = BALLOTS.may_load(deps.storage, (proposal_id, voter.clone()))?;
     let vote = ballot.map(|ballot| VoteInfo {
         voter,
@@ -705,9 +705,7 @@ pub fn query_list_votes(
     limit: Option<u64>,
 ) -> StdResult<Binary> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT);
-    let start_after = start_after
-        .map(|addr| deps.api.addr_validate(&addr))
-        .transpose()?;
+    let start_after = start_after.map(|addr| Addr::unchecked(&addr));
     let min = start_after.map(Bound::<Addr>::exclusive);
 
     let votes = BALLOTS
