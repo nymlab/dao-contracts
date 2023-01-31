@@ -20,6 +20,7 @@ pub enum ProposeMessage {
         title: String,
         description: String,
         msgs: Vec<CosmosMsg<Empty>>,
+        relayed_from: Option<String>,
     },
 }
 

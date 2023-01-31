@@ -212,12 +212,15 @@ fn unstake_tokens(
     info: MessageInfo,
     amount: Uint128,
 ) -> AnyResult<AppResponse> {
-    let msg = ExecuteMsg::Unstake { amount };
+    let msg = ExecuteMsg::Unstake {
+        amount,
+        relayed_from: None,
+    };
     app.execute_contract(info.sender, staking_addr.clone(), &msg, &[])
 }
 
 fn claim_tokens(app: &mut App, staking_addr: &Addr, info: MessageInfo) -> AnyResult<AppResponse> {
-    let msg = ExecuteMsg::Claim {};
+    let msg = ExecuteMsg::Claim { relayed_from: None };
     app.execute_contract(info.sender, staking_addr.clone(), &msg, &[])
 }
 

@@ -36,7 +36,10 @@ use crate::{
     proposal::advance_proposal_id,
     query::ProposalListResponse,
     query::{ProposalResponse, VoteInfo, VoteListResponse, VoteResponse},
-    state::{Ballot, BALLOTS, CONFIG, PROPOSALS, PROPOSAL_COUNT, PROPOSAL_HOOKS, VOTE_HOOKS},
+    state::{
+        Ballot, BALLOTS, CONFIG, ITEMS as DAO_ITEMS, PROPOSALS, PROPOSAL_COUNT, PROPOSAL_HOOKS,
+        VOTE_HOOKS,
+    },
 };
 
 pub(crate) const CONTRACT_NAME: &str = "crates.io:dao-proposal-single";
@@ -88,6 +91,25 @@ pub fn instantiate(
         .add_attribute("dao", dao))
 }
 
+fn get_sender_origin(
+    deps: Deps,
+    dao: Addr,
+    relayed_from: Option<String>,
+    sender: Addr,
+) -> Result<Addr, ContractError> {
+    match relayed_from {
+        Some(addr) => {
+            let dao_tunnel = DAO_ITEMS.query(&deps.querier, dao, "dao-tunnel".to_string())?;
+            if dao_tunnel.is_none() || dao_tunnel.unwrap() != sender.to_string() {
+                Err(ContractError::Unauthorized {})
+            } else {
+                Ok(Addr::unchecked(addr))
+            }
+        }
+        None => Ok(sender),
+    }
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
@@ -106,12 +128,17 @@ pub fn execute(
             proposal_id,
             vote,
             rationale,
-        } => execute_vote(deps, env, info, proposal_id, vote, rationale),
+            relayed_from,
+        } => execute_vote(deps, env, info, proposal_id, vote, rationale, relayed_from),
         ExecuteMsg::UpdateRationale {
             proposal_id,
             rationale,
-        } => execute_update_rationale(deps, info, proposal_id, rationale),
-        ExecuteMsg::Execute { proposal_id } => execute_execute(deps, env, info, proposal_id),
+            relayed_from,
+        } => execute_update_rationale(deps, info, proposal_id, rationale, relayed_from),
+        ExecuteMsg::Execute {
+            proposal_id,
+            relayed_from,
+        } => execute_execute(deps, env, info, proposal_id, relayed_from),
         ExecuteMsg::Close { proposal_id } => execute_close(deps, env, info, proposal_id),
         ExecuteMsg::UpdateConfig {
             threshold,
@@ -172,9 +199,7 @@ pub fn execute_propose(
         (None, ProposalCreationPolicy::Anyone {}) => sender.clone(),
         // `is_permitted` above checks that an allowed module is
         // actually sending the propose message.
-        (Some(proposer), ProposalCreationPolicy::Module { .. }) => {
-            deps.api.addr_validate(&proposer)?
-        }
+        (Some(proposer), ProposalCreationPolicy::Module { .. }) => Addr::unchecked(&proposer),
         _ => return Err(ContractError::InvalidProposer {}),
     };
 
@@ -260,16 +285,23 @@ pub fn execute_execute(
     env: Env,
     info: MessageInfo,
     proposal_id: u64,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let mut prop = PROPOSALS
         .may_load(deps.storage, proposal_id)?
         .ok_or(ContractError::NoSuchProposal { id: proposal_id })?;
 
     let config = CONFIG.load(deps.storage)?;
+    let sender = get_sender_origin(
+        deps.as_ref(),
+        config.dao.clone(),
+        relayed_from,
+        info.sender.clone(),
+    )?;
     if config.only_members_execute {
         let power = get_voting_power(
             deps.as_ref(),
-            info.sender.clone(),
+            sender.clone(),
             config.dao.clone(),
             Some(prop.start_height),
         )?;
@@ -347,6 +379,7 @@ pub fn execute_execute(
         .add_submessages(hooks)
         .add_attribute("action", "execute")
         .add_attribute("sender", info.sender)
+        .add_attribute("executor", sender)
         .add_attribute("proposal_id", proposal_id.to_string())
         .add_attribute("dao", config.dao))
 }
@@ -358,6 +391,7 @@ pub fn execute_vote(
     proposal_id: u64,
     vote: Vote,
     rationale: Option<String>,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let mut prop = PROPOSALS
@@ -375,9 +409,16 @@ pub fn execute_vote(
         return Err(ContractError::Expired { id: proposal_id });
     }
 
+    let sender = get_sender_origin(
+        deps.as_ref(),
+        config.dao.clone(),
+        relayed_from,
+        info.sender.clone(),
+    )?;
+
     let vote_power = get_voting_power(
         deps.as_ref(),
-        info.sender.clone(),
+        sender.clone(),
         config.dao,
         Some(prop.start_height),
     )?;
@@ -385,7 +426,7 @@ pub fn execute_vote(
         return Err(ContractError::NotRegistered {});
     }
 
-    BALLOTS.update(deps.storage, (proposal_id, &info.sender), |bal| match bal {
+    BALLOTS.update(deps.storage, (proposal_id, &sender), |bal| match bal {
         Some(current_ballot) => {
             if prop.allow_revoting {
                 if current_ballot.vote == vote {
@@ -437,7 +478,7 @@ pub fn execute_vote(
         VOTE_HOOKS,
         deps.storage,
         proposal_id,
-        info.sender.to_string(),
+        sender.to_string(),
         vote.to_string(),
     )?;
 
@@ -446,6 +487,7 @@ pub fn execute_vote(
         .add_submessages(vote_hooks)
         .add_attribute("action", "vote")
         .add_attribute("sender", info.sender)
+        .add_attribute("voter", sender)
         .add_attribute("proposal_id", proposal_id.to_string())
         .add_attribute("position", vote.to_string())
         .add_attribute("rationale", rationale.as_deref().unwrap_or("_none"))
@@ -457,12 +499,15 @@ pub fn execute_update_rationale(
     info: MessageInfo,
     proposal_id: u64,
     rationale: Option<String>,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    let sender = get_sender_origin(deps.as_ref(), config.dao, relayed_from, info.sender.clone())?;
     BALLOTS.update(
         deps.storage,
         // info.sender can't be forged so we implicitly access control
         // with the key.
-        (proposal_id, &info.sender),
+        (proposal_id, &sender),
         |ballot| match ballot {
             Some(ballot) => Ok(Ballot {
                 rationale: rationale.clone(),
@@ -478,6 +523,7 @@ pub fn execute_update_rationale(
     Ok(Response::default()
         .add_attribute("action", "update_rationale")
         .add_attribute("sender", info.sender)
+        .add_attribute("voted", sender)
         .add_attribute("proposal_id", proposal_id.to_string())
         .add_attribute("rationale", rationale.as_deref().unwrap_or("_none")))
 }
@@ -803,7 +849,7 @@ pub fn query_next_proposal_id(deps: Deps) -> StdResult<Binary> {
 }
 
 pub fn query_vote(deps: Deps, proposal_id: u64, voter: String) -> StdResult<Binary> {
-    let voter = deps.api.addr_validate(&voter)?;
+    let voter = Addr::unchecked(&voter);
     let ballot = BALLOTS.may_load(deps.storage, (proposal_id, &voter))?;
     let vote = ballot.map(|ballot| VoteInfo {
         voter,
@@ -821,9 +867,7 @@ pub fn query_list_votes(
     limit: Option<u64>,
 ) -> StdResult<Binary> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT);
-    let start_after = start_after
-        .map(|addr| deps.api.addr_validate(&addr))
-        .transpose()?;
+    let start_after = start_after.map(|addr| Addr::unchecked(&addr));
     let min = start_after.as_ref().map(Bound::<&Addr>::exclusive);
 
     let votes = BALLOTS

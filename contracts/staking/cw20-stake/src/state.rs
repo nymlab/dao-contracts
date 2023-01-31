@@ -2,7 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
 use cw_controllers::Claims;
 use cw_controllers::Hooks;
-use cw_storage_plus::{Item, SnapshotItem, SnapshotMap, Strategy};
+use cw_storage_plus::{Item, Map, SnapshotItem, SnapshotMap, Strategy};
 use cw_utils::Duration;
 
 #[cw_serde]
@@ -20,6 +20,9 @@ pub const STAKED_BALANCES: SnapshotMap<&Addr, Uint128> = SnapshotMap::new(
     "staked_balance__changelog",
     Strategy::EveryBlock,
 );
+
+/// To query dao-tunnel address on DAO  contract
+pub const ITEMS: Map<String, String> = Map::new("items");
 
 pub const STAKED_TOTAL: SnapshotItem<Uint128> = SnapshotItem::new(
     "total_staked",

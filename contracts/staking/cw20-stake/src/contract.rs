@@ -7,6 +7,7 @@ use cosmwasm_std::{
 };
 
 use cw20::{Cw20ReceiveMsg, TokenInfoResponse};
+use cw_ownable::get_ownership;
 
 use crate::hooks::{stake_hook_msgs, unstake_hook_msgs};
 use crate::math;
@@ -16,7 +17,8 @@ use crate::msg::{
     TotalStakedAtHeightResponse, TotalValueResponse,
 };
 use crate::state::{
-    Config, BALANCE, CLAIMS, CONFIG, HOOKS, MAX_CLAIMS, STAKED_BALANCES, STAKED_TOTAL,
+    Config, BALANCE, CLAIMS, CONFIG, HOOKS, ITEMS as DAO_ITEMS, MAX_CLAIMS, STAKED_BALANCES,
+    STAKED_TOTAL,
 };
 use crate::ContractError;
 use cw2::{get_contract_version, set_contract_version, ContractVersion};
@@ -52,6 +54,30 @@ fn validate_duration(duration: Option<Duration>) -> Result<(), ContractError> {
         }
     }
     Ok(())
+}
+
+fn get_sender_origin(
+    deps: Deps,
+    relayed_from: Option<String>,
+    sender: Addr,
+) -> Result<Addr, ContractError> {
+    match relayed_from {
+        Some(addr) => {
+            let owner = get_ownership(deps.storage)?.owner;
+            if owner.is_none() {
+                Err(ContractError::Unauthorized {})
+            } else {
+                let dao_tunnel =
+                    DAO_ITEMS.query(&deps.querier, owner.unwrap(), "dao-tunnel".to_string())?;
+                if dao_tunnel.is_none() || dao_tunnel.unwrap() != sender.to_string() {
+                    Err(ContractError::Unauthorized {})
+                } else {
+                    Ok(Addr::unchecked(addr))
+                }
+            }
+        }
+        None => Ok(sender),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -101,8 +127,11 @@ pub fn execute(
 ) -> Result<Response<Empty>, ContractError> {
     match msg {
         ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
-        ExecuteMsg::Unstake { amount } => execute_unstake(deps, env, info, amount),
-        ExecuteMsg::Claim {} => execute_claim(deps, env, info),
+        ExecuteMsg::Unstake {
+            amount,
+            relayed_from,
+        } => execute_unstake(deps, env, info, amount, relayed_from),
+        ExecuteMsg::Claim { relayed_from } => execute_claim(deps, env, info, relayed_from),
         ExecuteMsg::UpdateConfig { duration } => execute_update_config(info, deps, duration),
         ExecuteMsg::AddHook { addr } => execute_add_hook(deps, env, info, addr),
         ExecuteMsg::RemoveHook { addr } => execute_remove_hook(deps, env, info, addr),
@@ -195,6 +224,7 @@ pub fn execute_unstake(
     env: Env,
     info: MessageInfo,
     amount: Uint128,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let balance = BALANCE.load(deps.storage)?;
@@ -210,9 +240,12 @@ pub fn execute_unstake(
         return Err(ContractError::ImpossibleUnstake {});
     }
     let amount_to_claim = math::amount_to_claim(staked_total, balance, amount);
+
+    let sender = get_sender_origin(deps.as_ref(), relayed_from, info.sender)?;
+
     STAKED_BALANCES.update(
         deps.storage,
-        &info.sender,
+        &sender,
         env.block.height,
         |bal| -> StdResult<Uint128> { Ok(bal.unwrap_or_default().checked_sub(amount)?) },
     )?;
@@ -230,11 +263,11 @@ pub fn execute_unstake(
             .checked_sub(amount_to_claim)
             .map_err(StdError::overflow)?,
     )?;
-    let hook_msgs = unstake_hook_msgs(deps.storage, info.sender.clone(), amount)?;
+    let hook_msgs = unstake_hook_msgs(deps.storage, sender.clone(), amount)?;
     match config.unstaking_duration {
         None => {
             let cw_send_msg = cw20::Cw20ExecuteMsg::Transfer {
-                recipient: info.sender.to_string(),
+                recipient: sender.to_string(),
                 amount: amount_to_claim,
             };
             let wasm_msg = cosmwasm_std::WasmMsg::Execute {
@@ -246,26 +279,26 @@ pub fn execute_unstake(
                 .add_message(wasm_msg)
                 .add_submessages(hook_msgs)
                 .add_attribute("action", "unstake")
-                .add_attribute("from", info.sender)
+                .add_attribute("from", sender)
                 .add_attribute("amount", amount)
                 .add_attribute("claim_duration", "None"))
         }
         Some(duration) => {
-            let outstanding_claims = CLAIMS.query_claims(deps.as_ref(), &info.sender)?.claims;
+            let outstanding_claims = CLAIMS.query_claims(deps.as_ref(), &sender)?.claims;
             if outstanding_claims.len() + 1 > MAX_CLAIMS as usize {
                 return Err(ContractError::TooManyClaims {});
             }
 
             CLAIMS.create_claim(
                 deps.storage,
-                &info.sender,
+                &sender,
                 amount_to_claim,
                 duration.after(&env.block),
             )?;
             Ok(Response::new()
                 .add_attribute("action", "unstake")
                 .add_submessages(hook_msgs)
-                .add_attribute("from", info.sender)
+                .add_attribute("from", sender)
                 .add_attribute("amount", amount)
                 .add_attribute("claim_duration", format!("{duration}")))
         }
@@ -276,14 +309,16 @@ pub fn execute_claim(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
+    relayed_from: Option<String>,
 ) -> Result<Response, ContractError> {
-    let release = CLAIMS.claim_tokens(deps.storage, &info.sender, &_env.block, None)?;
+    let sender = get_sender_origin(deps.as_ref(), relayed_from, info.sender)?;
+    let release = CLAIMS.claim_tokens(deps.storage, &sender, &_env.block, None)?;
     if release.is_zero() {
         return Err(ContractError::NothingToClaim {});
     }
     let config = CONFIG.load(deps.storage)?;
     let cw_send_msg = cw20::Cw20ExecuteMsg::Transfer {
-        recipient: info.sender.to_string(),
+        recipient: sender.to_string(),
         amount: release,
     };
     let wasm_msg = cosmwasm_std::WasmMsg::Execute {
@@ -294,7 +329,7 @@ pub fn execute_claim(
     Ok(Response::new()
         .add_message(wasm_msg)
         .add_attribute("action", "claim")
-        .add_attribute("from", info.sender)
+        .add_attribute("from", sender)
         .add_attribute("amount", release))
 }
 
@@ -378,7 +413,7 @@ pub fn query_staked_balance_at_height(
     address: String,
     height: Option<u64>,
 ) -> StdResult<StakedBalanceAtHeightResponse> {
-    let address = deps.api.addr_validate(&address)?;
+    let address = Addr::unchecked(&address);
     let height = height.unwrap_or(env.block.height);
     let balance = STAKED_BALANCES
         .may_load_at_height(deps.storage, &address, height)?
@@ -403,7 +438,7 @@ pub fn query_staked_value(
     _env: Env,
     address: String,
 ) -> StdResult<StakedValueResponse> {
-    let address = deps.api.addr_validate(&address)?;
+    let address = Addr::unchecked(&address);
     let balance = BALANCE.load(deps.storage).unwrap_or_default();
     let staked = STAKED_BALANCES
         .load(deps.storage, &address)
@@ -434,7 +469,7 @@ pub fn query_config(deps: Deps) -> StdResult<Config> {
 }
 
 pub fn query_claims(deps: Deps, address: String) -> StdResult<ClaimsResponse> {
-    CLAIMS.query_claims(deps, &deps.api.addr_validate(&address)?)
+    CLAIMS.query_claims(deps, &Addr::unchecked(&address))
 }
 
 pub fn query_hooks(deps: Deps) -> StdResult<GetHooksResponse> {
@@ -448,9 +483,7 @@ pub fn query_list_stakers(
     start_after: Option<String>,
     limit: Option<u32>,
 ) -> StdResult<Binary> {
-    let start_at = start_after
-        .map(|addr| deps.api.addr_validate(&addr))
-        .transpose()?;
+    let start_at = start_after.map(|addr| Addr::unchecked(&addr));
 
     let stakers = cw_paginate::paginate_snapshot_map(
         deps,

@@ -215,6 +215,7 @@ where
                 proposal_id: 1,
                 vote: position,
                 rationale: None,
+                relayed_from: None,
             },
             &[],
         );

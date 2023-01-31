@@ -30,4 +30,6 @@ pub enum ContractError {
     InvalidUnstakingDuration {},
     #[error("can not migrate. current version is up to date")]
     AlreadyMigrated {},
+    #[error("Unauthorized relaying tunnel")]
+    Unauthorized {},
 }

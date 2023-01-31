@@ -71,3 +71,6 @@ pub const VOTE_HOOKS: Hooks = Hooks::new("vote_hooks");
 /// The address of the pre-propose module associated with this
 /// proposal module (if any).
 pub const CREATION_POLICY: Item<ProposalCreationPolicy> = Item::new("creation_policy");
+
+/// Add to check dao_tunnel contract address in DAO core
+pub const ITEMS: Map<String, String> = Map::new("items");

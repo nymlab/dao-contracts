@@ -30,3 +30,6 @@ pub(crate) fn advance_approval_id(store: &mut dyn Storage) -> StdResult<u64> {
     CURRENT_ID.save(store, &id)?;
     Ok(id)
 }
+
+/// Vectis: added to query the dao-tunnel address on the DAO core
+pub const ITEMS: Map<String, String> = Map::new("items");

@@ -23,11 +23,22 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
-    Unstake { amount: Uint128 },
-    Claim {},
-    UpdateConfig { duration: Option<Duration> },
-    AddHook { addr: String },
-    RemoveHook { addr: String },
+    Unstake {
+        amount: Uint128,
+        relayed_from: Option<String>,
+    },
+    Claim {
+        relayed_from: Option<String>,
+    },
+    UpdateConfig {
+        duration: Option<Duration>,
+    },
+    AddHook {
+        addr: String,
+    },
+    RemoveHook {
+        addr: String,
+    },
 }
 
 #[cw_serde]

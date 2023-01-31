@@ -43,6 +43,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Creates a proposal in the module.
+    // TODO: relay from?
     Propose(SingleChoiceProposeMsg),
     /// Votes on a proposal. Voting power is determined by the DAO's
     /// voting power module.
@@ -55,18 +56,24 @@ pub enum ExecuteMsg {
         /// be updated, set, or removed later by the address casting
         /// the vote.
         rationale: Option<String>,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Updates the sender's rationale for their vote on the specified
     /// proposal. Errors if no vote vote has been cast.
     UpdateRationale {
         proposal_id: u64,
         rationale: Option<String>,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Causes the messages associated with a passed proposal to be
     /// executed by the DAO.
     Execute {
         /// The ID of the proposal to execute.
         proposal_id: u64,
+        /// if the sender is from another chain, this is their addr
+        relayed_from: Option<String>,
     },
     /// Closes a proposal that has failed (either not passed or timed
     /// out). If applicable this will cause the proposal deposit

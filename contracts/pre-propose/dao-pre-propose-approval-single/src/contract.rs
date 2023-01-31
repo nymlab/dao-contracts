@@ -1,8 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult, SubMsg,
-    WasmMsg,
+    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Order, Response, StdResult,
+    SubMsg, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw_paginate::paginate_map_values;
@@ -16,7 +16,7 @@ use crate::msg::{
     ApproverProposeMessage, ExecuteExt, ExecuteMsg, InstantiateExt, InstantiateMsg, ProposeMessage,
     ProposeMessageInternal, QueryExt, QueryMsg,
 };
-use crate::state::{advance_approval_id, PendingProposal, APPROVER, PENDING_PROPOSALS};
+use crate::state::{advance_approval_id, PendingProposal, APPROVER, ITEMS, PENDING_PROPOSALS};
 
 pub(crate) const CONTRACT_NAME: &str = "crates.io:dao-pre-propose-approval-single";
 pub(crate) const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -91,12 +91,30 @@ pub fn execute_propose(
             title,
             description,
             msgs,
-        } => ProposeMsg {
-            title,
-            description,
-            msgs,
-            proposer: Some(info.sender.to_string()),
-        },
+            relayed_from,
+        } => {
+            if relayed_from.is_some() {
+                let dao = PrePropose::default().dao.load(deps.storage)?;
+                let dao_tunnel = ITEMS.query(&deps.querier, dao, "dao-tunnel".into())?;
+                if dao_tunnel.is_none() || dao_tunnel.unwrap() != info.sender.to_string() {
+                    return Err(PreProposeError::Unauthorized {});
+                };
+
+                ProposeMsg {
+                    title,
+                    description,
+                    msgs,
+                    proposer: relayed_from,
+                }
+            } else {
+                ProposeMsg {
+                    title,
+                    description,
+                    msgs,
+                    proposer: Some(info.sender.to_string()),
+                }
+            }
+        }
     };
 
     // Prepare proposal submitted hooks msg to notify approver.  Make
@@ -125,7 +143,8 @@ pub fn execute_propose(
         approval_id,
         &PendingProposal {
             approval_id,
-            proposer: info.sender,
+            // This is always going to be `Some` as we are in the approval contract
+            proposer: Addr::unchecked(propose_msg_internal.proposer.as_ref().unwrap()),
             msg: propose_msg_internal,
             deposit: config.deposit_info,
         },

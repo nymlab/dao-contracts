@@ -354,7 +354,10 @@ fn test_proposal_message_execution() {
     app.execute_contract(
         Addr::unchecked(CREATOR_ADDR),
         proposal_module.clone(),
-        &ExecuteMsg::Execute { proposal_id },
+        &ExecuteMsg::Execute {
+            proposal_id,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap_err();
@@ -1929,7 +1932,10 @@ fn test_execution_failed() {
         .execute_contract(
             Addr::unchecked(CREATOR_ADDR),
             proposal_module.clone(),
-            &ExecuteMsg::Execute { proposal_id },
+            &ExecuteMsg::Execute {
+                proposal_id,
+                relayed_from: None,
+            },
             &[],
         )
         .unwrap_err()
@@ -2644,6 +2650,7 @@ pub fn test_not_allow_voting_on_expired_proposal() {
                 proposal_id,
                 vote: Vote::Yes,
                 rationale: None,
+                relayed_from: None,
             },
             &[],
         )

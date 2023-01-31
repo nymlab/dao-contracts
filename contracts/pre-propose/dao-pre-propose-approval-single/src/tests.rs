@@ -182,6 +182,7 @@ fn make_pre_proposal(app: &mut App, pre_propose: Addr, proposer: &str, funds: &[
                 title: "title".to_string(),
                 description: "description".to_string(),
                 msgs: vec![],
+                relayed_from: None,
             },
         },
         funds,
@@ -254,6 +255,7 @@ fn vote(app: &mut App, module: Addr, sender: &str, id: u64, position: Vote) -> S
             proposal_id: id,
             vote: position,
             rationale: None,
+            relayed_from: None,
         },
         &[],
     )
@@ -367,7 +369,10 @@ fn close_proposal(app: &mut App, module: Addr, sender: &str, proposal_id: u64) {
     app.execute_contract(
         Addr::unchecked(sender),
         module,
-        &dao_proposal_single::msg::ExecuteMsg::Close { proposal_id },
+        &dao_proposal_single::msg::ExecuteMsg::Close {
+            proposal_id,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap();
@@ -377,7 +382,10 @@ fn execute_proposal(app: &mut App, module: Addr, sender: &str, proposal_id: u64)
     app.execute_contract(
         Addr::unchecked(sender),
         module,
-        &dao_proposal_single::msg::ExecuteMsg::Execute { proposal_id },
+        &dao_proposal_single::msg::ExecuteMsg::Execute {
+            proposal_id,
+            relayed_from: None,
+        },
         &[],
     )
     .unwrap();
@@ -998,6 +1006,7 @@ fn test_permissions() {
                     title: "I would like to join the DAO".to_string(),
                     description: "though, I am currently not a member.".to_string(),
                     msgs: vec![],
+                    relayed_from: None,
                 },
             },
             &[],
@@ -1146,6 +1155,7 @@ fn test_no_deposit_required_members_submission() {
                     title: "I would like to join the DAO".to_string(),
                     description: "though, I am currently not a member.".to_string(),
                     msgs: vec![],
+                    relayed_from: None,
                 },
             },
             &[],
