@@ -98,6 +98,12 @@
             "properties": {
               "amount": {
                 "$ref": "#/definitions/Uint128"
+              },
+              "relayed_from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "additionalProperties": false
@@ -113,6 +119,14 @@
         "properties": {
           "claim": {
             "type": "object",
+            "properties": {
+              "relayed_from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
             "additionalProperties": false
           }
         },

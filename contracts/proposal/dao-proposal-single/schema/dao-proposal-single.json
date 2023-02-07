@@ -386,6 +386,13 @@
                   "null"
                 ]
               },
+              "relayed_from": {
+                "description": "if the sender is from another chain, this is their addr",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "vote": {
                 "description": "The senders position on the proposal.",
                 "allOf": [
@@ -423,6 +430,13 @@
                   "string",
                   "null"
                 ]
+              },
+              "relayed_from": {
+                "description": "if the sender is from another chain, this is their addr",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "additionalProperties": false
@@ -448,6 +462,13 @@
                 "type": "integer",
                 "format": "uint64",
                 "minimum": 0.0
+              },
+              "relayed_from": {
+                "description": "if the sender is from another chain, this is their addr",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "additionalProperties": false

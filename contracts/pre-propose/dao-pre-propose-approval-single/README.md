@@ -1,6 +1,9 @@
 # Single choice proposal approval contract
 
-This contract implements an approval flow for proposals, it also handles deposit logic. It works with the `cwd-proposal-single` proposal module.
+_This is a fork of the original [cw20-stake] contract in the daodao v2 code._
+
+\_Similar to the VectisDAO version of the cw20-stake contract,
+this version of proposal approval allows for the dao-tunnel in [VectisDAO] to forward a remote chain `relayed_from` argument.
 
 ## Approval Logic
 
