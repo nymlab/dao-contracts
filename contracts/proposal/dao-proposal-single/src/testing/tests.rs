@@ -28,7 +28,10 @@ use dao_voting_cw20_staked::msg::ActiveThreshold;
 
 use crate::{
     contract::{migrate, CONTRACT_NAME, CONTRACT_VERSION},
-    msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg},
+    msg::{
+        ProposalSingleExecuteMsg as ExecuteMsg, ProposalSingleInstantiateMsg as InstantiateMsg,
+        ProposalSingleMigrateMsg as MigrateMsg, ProposalSingleQueryMsg as QueryMsg,
+    },
     proposal::SingleChoiceProposal,
     query::{ProposalResponse, VoteInfo},
     state::Config,
@@ -902,8 +905,9 @@ fn test_active_threshold_absolute() {
     make_proposal(&mut app, &proposal_module, CREATOR_ADDR, vec![]);
 
     // Unstake some tokens to make it inactive again.
-    let msg = cw20_stake::msg::ExecuteMsg::Unstake {
+    let msg = cw20_stake::msg::Cw20StakeExecuteMsg::Unstake {
         amount: Uint128::new(50),
+        relayed_from: None,
     };
     app.execute_contract(Addr::unchecked(CREATOR_ADDR), staking_contract, &msg, &[])
         .unwrap();
@@ -983,9 +987,9 @@ fn test_active_threshold_percent() {
     make_proposal(&mut app, &proposal_module, CREATOR_ADDR, vec![]);
 
     // Unstake some tokens to make it inactive again.
-    let msg = cw20_stake::msg::ExecuteMsg::Unstake {
+    let msg = cw20_stake::msg::Cw20StakeExecuteMsg::Unstake {
         amount: Uint128::new(1), // Only one is needed as we're right
-                                 // on the edge. :)
+        relayed_from: None,      // on the edge. :)
     };
     app.execute_contract(Addr::unchecked(CREATOR_ADDR), staking_contract, &msg, &[])
         .unwrap();

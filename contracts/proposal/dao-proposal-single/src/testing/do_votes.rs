@@ -14,7 +14,10 @@ use dao_voting::{
 };
 
 use crate::{
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    msg::{
+        ProposalSingleExecuteMsg as ExecuteMsg, ProposalSingleInstantiateMsg as InstantiateMsg,
+        ProposalSingleQueryMsg as QueryMsg,
+    },
     query::{ProposalResponse, VoteInfo, VoteResponse},
     testing::{instantiate::*, queries::query_deposit_config_and_pre_propose_module},
 };

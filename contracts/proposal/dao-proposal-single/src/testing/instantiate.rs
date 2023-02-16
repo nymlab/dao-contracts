@@ -13,7 +13,7 @@ use dao_voting::{
     threshold::{PercentageThreshold, Threshold::ThresholdQuorum},
 };
 
-use crate::msg::InstantiateMsg;
+use crate::msg::ProposalSingleInstantiateMsg as InstantiateMsg;
 
 use super::{
     contracts::{

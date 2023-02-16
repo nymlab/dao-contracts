@@ -23,7 +23,7 @@ use dao_voting::status::Status;
 use dao_voting::threshold::Threshold;
 use dao_voting::voting::{get_total_power, get_voting_power, validate_voting_period, Vote, Votes};
 
-use crate::msg::MigrateMsg;
+use crate::msg::ProposalSingleMigrateMsg as MigrateMsg;
 use crate::proposal::{next_proposal_id, SingleChoiceProposal};
 use crate::state::{Config, CREATION_POLICY};
 
@@ -32,7 +32,10 @@ use crate::v1_state::{
 };
 use crate::{
     error::ContractError,
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    msg::{
+        ProposalSingleExecuteMsg as ExecuteMsg, ProposalSingleInstantiateMsg as InstantiateMsg,
+        ProposalSingleQueryMsg as QueryMsg,
+    },
     proposal::advance_proposal_id,
     query::ProposalListResponse,
     query::{ProposalResponse, VoteInfo, VoteListResponse, VoteResponse},

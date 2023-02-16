@@ -68,7 +68,7 @@ pub fn instantiate(
                         deps.api.addr_validate(&staking_contract_address)?;
                     let resp: cw20_stake::state::Config = deps.querier.query_wasm_smart(
                         &staking_contract_address,
-                        &cw20_stake::msg::QueryMsg::GetConfig {},
+                        &cw20_stake::msg::Cw20StakeQueryMsg::GetConfig {},
                     )?;
 
                     if address != resp.token_address {
@@ -91,7 +91,7 @@ pub fn instantiate(
                         funds: vec![],
                         admin: Some(info.sender.to_string()),
                         label: env.contract.address.to_string(),
-                        msg: to_binary(&cw20_stake::msg::InstantiateMsg {
+                        msg: to_binary(&cw20_stake::msg::Cw20StakeInstantiateMsg {
                             owner: Some(info.sender.to_string()),
                             unstaking_duration,
                             token_address: address.to_string(),
@@ -264,7 +264,7 @@ pub fn query_voting_power_at_height(
     let address = Addr::unchecked(&address);
     let res: cw20_stake::msg::StakedBalanceAtHeightResponse = deps.querier.query_wasm_smart(
         staking_contract,
-        &cw20_stake::msg::QueryMsg::StakedBalanceAtHeight {
+        &cw20_stake::msg::Cw20StakeQueryMsg::StakedBalanceAtHeight {
             address: address.to_string(),
             height,
         },
@@ -283,7 +283,7 @@ pub fn query_total_power_at_height(
     let staking_contract = STAKING_CONTRACT.load(deps.storage)?;
     let res: cw20_stake::msg::TotalStakedAtHeightResponse = deps.querier.query_wasm_smart(
         staking_contract,
-        &cw20_stake::msg::QueryMsg::TotalStakedAtHeight { height },
+        &cw20_stake::msg::Cw20StakeQueryMsg::TotalStakedAtHeight { height },
     )?;
     to_binary(&dao_interface::voting::TotalPowerAtHeightResponse {
         power: res.total,
@@ -309,7 +309,7 @@ pub fn query_is_active(deps: Deps) -> StdResult<Binary> {
         let actual_power: cw20_stake::msg::TotalStakedAtHeightResponse =
             deps.querier.query_wasm_smart(
                 staking_contract,
-                &cw20_stake::msg::QueryMsg::TotalStakedAtHeight { height: None },
+                &cw20_stake::msg::Cw20StakeQueryMsg::TotalStakedAtHeight { height: None },
             )?;
         match threshold {
             ActiveThreshold::AbsoluteCount { count } => to_binary(&IsActiveResponse {
@@ -408,7 +408,7 @@ pub fn reply(deps: DepsMut, env: Env, msg: Reply) -> Result<Response, ContractEr
                         funds: vec![],
                         admin: Some(dao.to_string()),
                         label: env.contract.address.to_string(),
-                        msg: to_binary(&cw20_stake::msg::InstantiateMsg {
+                        msg: to_binary(&cw20_stake::msg::Cw20StakeInstantiateMsg {
                             owner: Some(dao.to_string()),
                             unstaking_duration,
                             token_address: token.to_string(),

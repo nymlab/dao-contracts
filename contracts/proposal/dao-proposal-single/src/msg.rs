@@ -7,7 +7,7 @@ use dao_voting::{
 };
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct ProposalSingleInstantiateMsg {
     /// The threshold a proposal must reach to complete.
     pub threshold: Threshold,
     /// The default maximum amount of time a proposal may be voted on
@@ -41,7 +41,7 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {
+pub enum ProposalSingleExecuteMsg {
     /// Creates a proposal in the module.
     // TODO: relay from?
     Propose(SingleChoiceProposeMsg),
@@ -141,7 +141,7 @@ pub enum ExecuteMsg {
 #[proposal_module_query]
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg {
+pub enum ProposalSingleQueryMsg {
     /// Gets the proposal module's config.
     #[returns(crate::state::Config)]
     Config {},
@@ -205,7 +205,7 @@ pub enum QueryMsg {
 }
 
 #[cw_serde]
-pub enum MigrateMsg {
+pub enum ProposalSingleMigrateMsg {
     FromV1 {
         /// This field was not present in DAO DAO v1. To migrate, a
         /// value must be specified.

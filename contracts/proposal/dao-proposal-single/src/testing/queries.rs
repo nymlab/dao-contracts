@@ -7,7 +7,7 @@ use dao_pre_propose_single as cppbps;
 use dao_voting::pre_propose::ProposalCreationPolicy;
 
 use crate::{
-    msg::QueryMsg,
+    msg::ProposalSingleQueryMsg as QueryMsg,
     query::{ProposalListResponse, ProposalResponse, VoteListResponse, VoteResponse},
     state::Config,
 };

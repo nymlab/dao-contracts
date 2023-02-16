@@ -325,7 +325,7 @@ fn test_v1_v2_full_migration() {
                 WasmMsg::Migrate {
                     contract_addr: proposal.to_string(),
                     new_code_id: v2_proposal_code,
-                    msg: to_binary(&crate::msg::MigrateMsg::FromV1 {
+                    msg: to_binary(&crate::msg::ProposalSingleMigrateMsg::FromV1 {
                         close_proposal_on_execution_failure: true,
                         pre_propose_info,
                     })

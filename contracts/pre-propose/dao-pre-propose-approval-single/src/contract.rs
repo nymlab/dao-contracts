@@ -99,7 +99,6 @@ pub fn execute_propose(
                 if dao_tunnel.is_none() || dao_tunnel.unwrap() != info.sender.to_string() {
                     return Err(PreProposeError::Unauthorized {});
                 };
-
                 ProposeMsg {
                     title,
                     description,

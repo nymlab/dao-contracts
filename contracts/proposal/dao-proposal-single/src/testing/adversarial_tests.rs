@@ -1,4 +1,4 @@
-use crate::msg::InstantiateMsg;
+use crate::msg::ProposalSingleInstantiateMsg as InstantiateMsg;
 use crate::testing::instantiate::get_pre_propose_info;
 use crate::testing::{
     execute::{

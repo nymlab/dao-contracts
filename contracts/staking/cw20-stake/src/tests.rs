@@ -1,9 +1,9 @@
 use std::borrow::BorrowMut;
 
 use crate::msg::{
-    ExecuteMsg, ListStakersResponse, MigrateMsg, QueryMsg, ReceiveMsg,
-    StakedBalanceAtHeightResponse, StakedValueResponse, StakerBalanceResponse,
-    TotalStakedAtHeightResponse, TotalValueResponse,
+    Cw20StakeExecuteMsg as ExecuteMsg, Cw20StakeMigrateMsg as MigrateMsg,
+    Cw20StakeQueryMsg as QueryMsg, ListStakersResponse, ReceiveMsg, StakedBalanceAtHeightResponse,
+    StakedValueResponse, StakerBalanceResponse, TotalStakedAtHeightResponse, TotalValueResponse,
 };
 use crate::state::{Config, MAX_CLAIMS};
 use crate::ContractError;
@@ -89,7 +89,7 @@ fn instantiate_cw20(app: &mut App, initial_balances: Vec<Cw20Coin>) -> Addr {
 
 fn instantiate_staking(app: &mut App, cw20: Addr, unstaking_duration: Option<Duration>) -> Addr {
     let staking_code_id = app.store_code(contract_staking());
-    let msg = crate::msg::InstantiateMsg {
+    let msg = crate::msg::Cw20StakeInstantiateMsg {
         owner: Some(OWNER.to_string()),
         token_address: cw20.to_string(),
         unstaking_duration,

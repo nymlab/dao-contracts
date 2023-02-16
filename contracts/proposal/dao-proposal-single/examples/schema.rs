@@ -1,11 +1,14 @@
 use cosmwasm_schema::write_api;
-use dao_proposal_single::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use dao_proposal_single::msg::{
+    ProposalSingleExecuteMsg, ProposalSingleInstantiateMsg, ProposalSingleMigrateMsg,
+    ProposalSingleQueryMsg,
+};
 
 fn main() {
     write_api! {
-        instantiate: InstantiateMsg,
-        query: QueryMsg,
-        execute: ExecuteMsg,
-        migrate: MigrateMsg,
+        instantiate: ProposalSingleInstantiateMsg,
+        query: ProposalSingleQueryMsg,
+        execute: ProposalSingleExecuteMsg,
+        migrate: ProposalSingleMigrateMsg,
     }
 }

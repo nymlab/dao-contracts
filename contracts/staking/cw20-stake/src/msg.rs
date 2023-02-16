@@ -12,7 +12,7 @@ pub use cw_controllers::ClaimsResponse;
 pub use cw_ownable::Ownership;
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct Cw20StakeInstantiateMsg {
     // Owner can update all configs including changing the owner. This will generally be a DAO.
     pub owner: Option<String>,
     pub token_address: String,
@@ -21,7 +21,7 @@ pub struct InstantiateMsg {
 
 #[cw_ownable]
 #[cw_serde]
-pub enum ExecuteMsg {
+pub enum Cw20StakeExecuteMsg {
     Receive(Cw20ReceiveMsg),
     Unstake {
         amount: Uint128,
@@ -49,7 +49,7 @@ pub enum ReceiveMsg {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg {
+pub enum Cw20StakeQueryMsg {
     #[returns(StakedBalanceAtHeightResponse)]
     StakedBalanceAtHeight {
         address: String,
@@ -77,7 +77,7 @@ pub enum QueryMsg {
 }
 
 #[cw_serde]
-pub enum MigrateMsg {
+pub enum Cw20StakeMigrateMsg {
     /// Migrates the contract from version one to version two. This
     /// will remove the contract's current manager, and require a
     /// nomination -> acceptance flow for future ownership transfers.

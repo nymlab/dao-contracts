@@ -12,9 +12,10 @@ use cw_ownable::get_ownership;
 use crate::hooks::{stake_hook_msgs, unstake_hook_msgs};
 use crate::math;
 use crate::msg::{
-    ExecuteMsg, GetHooksResponse, InstantiateMsg, ListStakersResponse, MigrateMsg, QueryMsg,
-    ReceiveMsg, StakedBalanceAtHeightResponse, StakedValueResponse, StakerBalanceResponse,
-    TotalStakedAtHeightResponse, TotalValueResponse,
+    Cw20StakeExecuteMsg as ExecuteMsg, Cw20StakeInstantiateMsg as InstantiateMsg,
+    Cw20StakeMigrateMsg as MigrateMsg, Cw20StakeQueryMsg as QueryMsg, GetHooksResponse,
+    ListStakersResponse, ReceiveMsg, StakedBalanceAtHeightResponse, StakedValueResponse,
+    StakerBalanceResponse, TotalStakedAtHeightResponse, TotalValueResponse,
 };
 use crate::state::{
     Config, BALANCE, CLAIMS, CONFIG, HOOKS, ITEMS as DAO_ITEMS, MAX_CLAIMS, STAKED_BALANCES,

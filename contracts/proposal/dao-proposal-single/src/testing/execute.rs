@@ -9,7 +9,7 @@ use dao_voting::{
 };
 
 use crate::{
-    msg::{ExecuteMsg, QueryMsg},
+    msg::{ProposalSingleExecuteMsg as ExecuteMsg, ProposalSingleQueryMsg as QueryMsg},
     query::ProposalResponse,
     testing::queries::{query_creation_policy, query_next_proposal_id},
     ContractError,
