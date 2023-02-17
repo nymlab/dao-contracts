@@ -178,7 +178,9 @@ pub fn execute_receive(
         });
     }
     let msg: ReceiveMsg = from_binary(&wrapper.msg)?;
-    let sender = deps.api.addr_validate(&wrapper.sender)?;
+    // The token_contract - GOVE is the only who who can send in to this contract
+    // it may send in addr from another chain
+    let sender = Addr::unchecked(wrapper.sender);
     match msg {
         ReceiveMsg::Stake {} => execute_stake(deps, env, sender, wrapper.amount),
         ReceiveMsg::Fund {} => execute_fund(deps, env, &sender, wrapper.amount),

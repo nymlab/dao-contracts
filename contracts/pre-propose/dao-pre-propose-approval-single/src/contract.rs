@@ -76,14 +76,6 @@ pub fn execute_propose(
 
     pre_propose_base.check_can_submit(deps.as_ref(), info.sender.clone())?;
 
-    // Take deposit, if configured.
-    let deposit_messages = if let Some(ref deposit_info) = config.deposit_info {
-        deposit_info.check_native_deposit_paid(&info)?;
-        deposit_info.get_take_deposit_messages(&info.sender, &env.contract.address)?
-    } else {
-        vec![]
-    };
-
     let approval_id = advance_approval_id(deps.storage)?;
 
     let propose_msg_internal = match msg {
@@ -114,6 +106,15 @@ pub fn execute_propose(
                 }
             }
         }
+    };
+    // Take deposit, if configured.
+    let deposit_messages = if let Some(ref deposit_info) = config.deposit_info {
+        deposit_info.get_take_deposit_messages(
+            &Addr::unchecked(propose_msg_internal.proposer.as_ref().unwrap()),
+            &env.contract.address,
+        )?
+    } else {
+        vec![]
     };
 
     // Prepare proposal submitted hooks msg to notify approver.  Make
