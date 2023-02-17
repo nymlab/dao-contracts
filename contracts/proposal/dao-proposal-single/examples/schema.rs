@@ -1,3 +1,4 @@
+//use cosmwasm_schema::write_api;
 use cosmwasm_schema::write_api;
 use dao_proposal_single::msg::{
     ProposalSingleExecuteMsg, ProposalSingleInstantiateMsg, ProposalSingleMigrateMsg,

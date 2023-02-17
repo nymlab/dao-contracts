@@ -31,5 +31,7 @@ pub enum ContractError {
     #[error("can not migrate. current version is up to date")]
     AlreadyMigrated {},
     #[error("Unauthorized relaying tunnel")]
-    Unauthorized {},
+    UnauthorizedUnstakeRelayer {},
+    #[error("Contract has no owner")]
+    NoOwner,
 }

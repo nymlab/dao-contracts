@@ -102,7 +102,7 @@ fn get_sender_origin(
 ) -> Result<Addr, ContractError> {
     match relayed_from {
         Some(addr) => {
-            let dao_tunnel = DAO_ITEMS.query(&deps.querier, dao, "dao-tunnel".to_string())?;
+            let dao_tunnel = DAO_ITEMS.query(&deps.querier, dao, "DaoTunnel".to_string())?;
             if dao_tunnel.is_none() || dao_tunnel.unwrap() != sender.to_string() {
                 Err(ContractError::Unauthorized {})
             } else {

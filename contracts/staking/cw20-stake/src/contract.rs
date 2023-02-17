@@ -66,12 +66,12 @@ fn get_sender_origin(
         Some(addr) => {
             let owner = get_ownership(deps.storage)?.owner;
             if owner.is_none() {
-                Err(ContractError::Unauthorized {})
+                Err(ContractError::NoOwner {})
             } else {
                 let dao_tunnel =
-                    DAO_ITEMS.query(&deps.querier, owner.unwrap(), "dao-tunnel".to_string())?;
+                    DAO_ITEMS.query(&deps.querier, owner.unwrap(), "DaoTunnel".to_string())?;
                 if dao_tunnel.is_none() || dao_tunnel.unwrap() != sender.to_string() {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::UnauthorizedUnstakeRelayer {})
                 } else {
                     Ok(Addr::unchecked(addr))
                 }
@@ -178,7 +178,9 @@ pub fn execute_receive(
         });
     }
     let msg: ReceiveMsg = from_binary(&wrapper.msg)?;
-    let sender = deps.api.addr_validate(&wrapper.sender)?;
+    // The token_contract - GOVE is the only who who can send in to this contract
+    // it may send in addr from another chain
+    let sender = Addr::unchecked(wrapper.sender);
     match msg {
         ReceiveMsg::Stake {} => execute_stake(deps, env, sender, wrapper.amount),
         ReceiveMsg::Fund {} => execute_fund(deps, env, &sender, wrapper.amount),

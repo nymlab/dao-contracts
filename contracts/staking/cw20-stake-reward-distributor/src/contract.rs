@@ -134,7 +134,7 @@ pub fn validate_staking(deps: Deps, staking_addr: Addr) -> bool {
     let response: Result<cw20_stake::msg::TotalStakedAtHeightResponse, StdError> =
         deps.querier.query_wasm_smart(
             staking_addr,
-            &cw20_stake::msg::QueryMsg::TotalStakedAtHeight { height: None },
+            &cw20_stake::msg::Cw20StakeQueryMsg::TotalStakedAtHeight { height: None },
         );
     response.is_ok()
 }

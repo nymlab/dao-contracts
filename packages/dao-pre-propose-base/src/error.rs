@@ -44,8 +44,11 @@ pub enum PreProposeError {
     #[error("Proposal not found")]
     ProposalNotFound {},
 
-    #[error("Unauthorized")]
-    Unauthorized {},
+    #[error("PreProposal Unauthorized")]
+    Unauthorized,
+
+    #[error("PreProposal Unauthorized Relayer")]
+    UnauthorizedPreProposalRelayer,
 
     #[error("An unknown reply ID was received.")]
     UnknownReplyID {},

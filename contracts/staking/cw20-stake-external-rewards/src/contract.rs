@@ -47,7 +47,7 @@ pub fn instantiate(
     // Verify contract provided is a staking contract
     let _: cw20_stake::msg::TotalStakedAtHeightResponse = deps.querier.query_wasm_smart(
         &msg.staking_contract,
-        &cw20_stake::msg::QueryMsg::TotalStakedAtHeight { height: None },
+        &cw20_stake::msg::Cw20StakeQueryMsg::TotalStakedAtHeight { height: None },
     )?;
 
     let config = Config {
@@ -365,14 +365,14 @@ fn get_last_time_reward_applicable(deps: Deps, env: &Env) -> StdResult<u64> {
 }
 
 fn get_total_staked(deps: Deps, contract_addr: &Addr) -> StdResult<Uint128> {
-    let msg = cw20_stake::msg::QueryMsg::TotalStakedAtHeight { height: None };
+    let msg = cw20_stake::msg::Cw20StakeQueryMsg::TotalStakedAtHeight { height: None };
     let resp: cw20_stake::msg::TotalStakedAtHeightResponse =
         deps.querier.query_wasm_smart(contract_addr, &msg)?;
     Ok(resp.total)
 }
 
 fn get_staked_balance(deps: Deps, contract_addr: &Addr, addr: &Addr) -> StdResult<Uint128> {
-    let msg = cw20_stake::msg::QueryMsg::StakedBalanceAtHeight {
+    let msg = cw20_stake::msg::Cw20StakeQueryMsg::StakedBalanceAtHeight {
         address: addr.into(),
         height: None,
     };
